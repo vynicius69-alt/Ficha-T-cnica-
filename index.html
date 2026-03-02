@@ -3,72 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - Estabilizado v6</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Chef GG Cloud - v7 Final</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --warning: #f59e0b;
-            --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff;
-            --text-main: #334155; --text-muted: #64748b;
-        }
-
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff; --text-main: #334155; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--light); color: var(--text-main); line-height: 1.6; }
-
-        /* UI APP */
-        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 80px; }
+        body { font-family: 'Inter', sans-serif; background: var(--light); color: var(--text-main); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); position: relative; padding-bottom: 80px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
         .content { padding: 15px; }
         .hidden { display: none !important; }
-
         .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; background: white; font-family: inherit; }
-        
-        button { cursor: pointer; border: none; font-family: 'Inter', sans-serif; font-weight: 600; transition: 0.2s; }
-        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; margin-top: 10px; }
-        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-main); }
-        .btn-small { padding: 12px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; flex-shrink: 0; }
-        
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; color: white; }
-        .status-ativo { background: var(--success); }
-        .status-inativo { background: var(--text-muted); }
-        .status-teste { background: var(--warning); }
-
-        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; border: 1px solid var(--border); display: block;}
-        .list-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; margin-right: 12px; border: 1px solid var(--border); }
-
-        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { text-align: center; background: none; color: var(--text-muted); font-size: 10px; flex: 1; border: none; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; }
+        button { cursor: pointer; border: none; font-weight: 600; transition: 0.2s; border-radius: 8px; }
+        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; font-size: 16px; }
+        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; font-size: 13px; }
+        .btn-small { padding: 10px; background: var(--dark); color: white; }
+        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; }
+        .list-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; margin-right: 12px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; padding: 10px 0; }
+        .nav-item { flex: 1; text-align: center; background: none; color: #64748b; font-size: 10px; }
         .nav-item.active { color: var(--primary); }
-
-        .cmv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .cmv-box { background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; border: 1px solid var(--border); }
-
-        .history-list { font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px; }
-        .history-item { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid #f1f5f9; }
-
-        /* --- IMPRESSÃO --- */
-        #print-section { display: none; }
-        @media print {
-            .app-container, .nav-bar { display: none !important; }
-            #print-section { display: block !important; width: 100%; }
-            .p-header { display: flex; justify-content: space-between; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-            .p-financial-box { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid #ddd; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-            .p-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            .p-table th, .p-table td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
-            .p-img-main { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 20px; }
-        }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
+    <div id="loading-overlay"><span>Sincronizando com a Nuvem...</span></div>
+
     <div class="app-container">
-        <div class="header"><h2>Chef GG Pro</h2></div>
+        <div class="header"><h2>Chef GG Cloud</h2></div>
 
         <div class="content">
             <div id="screen-home" class="screen">
-                <div class="card"><h3>Dashboard</h3></div>
+                <div class="card"><h3>Dashboard Global</h3><p>Dados salvos na conta <b>chef-gg-pro</b></p></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="card" style="text-align: center;"><small>Insumos</small><h2 id="count-insumos">0</h2></div>
                     <div class="card" style="text-align: center;"><small>Receitas</small><h2 id="count-lanches">0</h2></div>
@@ -77,79 +49,26 @@
 
             <div id="screen-lanches" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                    <h3>Fichas Técnicas</h3>
+                    <h3>Minhas Receitas</h3>
                     <button class="btn-outline" onclick="abrirNovaFicha()">+ Criar</button>
                 </div>
                 <div id="list-lanches"></div>
             </div>
 
             <div id="screen-ficha" class="screen hidden">
-                <h3 id="ft-titulo-form">Ficha Técnica</h3>
-                
-                <div class="card" style="margin-top:15px">
-                    <label>Imagem</label>
-                    <img id="ft-img-preview" class="img-preview" src="">
-                    <input type="file" id="ft-img-input" accept="image/*" onchange="previewImage(this)">
-                </div>
-
+                <h3>Ficha Técnica</h3>
+                <div class="card"><label>Nome</label><input type="text" id="ft-nome"><label>Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01"></div>
                 <div class="card">
-                    <label>Nome do Prato</label>
-                    <input type="text" id="ft-nome" placeholder="Ex: Burger Bacon">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1"><label>Categoria</label><select id="ft-tipo"></select></div>
-                        <div style="flex:1"><label>Situação</label>
-                            <select id="ft-status">
-                                <option value="ativo">Ativo</option>
-                                <option value="teste">Em Teste</option>
-                                <option value="inativo">Inativo</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1"><label>Rendimento (Un)</label><input type="number" id="ft-rendimento" value="1" step="any"></div>
-                        <div style="flex:1"><label>Venda (R$)</label><input type="number" id="ft-venda-manual" placeholder="0.00" step="any"></div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <label>Ingredientes</label>
+                    <label>Adicionar Ingrediente</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <select id="ft-select-insumo" style="flex:3; margin-bottom:0;"></select>
-                        <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin-bottom:0;" step="any">
+                        <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin-bottom:0;">
                         <button onclick="addIngredienteFicha()" class="btn-small" style="background:var(--success)">+</button>
                     </div>
                     <div id="ft-lista-itens"></div>
                 </div>
-
-                <div class="card">
-                    <label>Preparo</label>
-                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                        <input type="text" id="ft-passo-input" placeholder="Novo passo..." style="margin-bottom:0;">
-                        <button onclick="addPassoFicha()" class="btn-small" style="background:var(--primary)">+</button>
-                    </div>
-                    <div id="ft-lista-passos"></div>
-                </div>
-
-                <div class="card"><label>Observações</label><textarea id="ft-obs" rows="2"></textarea></div>
-
-                <div class="cmv-grid">
-                    <div class="cmv-box"><small>Preço 35%</small><br><b id="res-35">R$ 0,00</b></div>
-                    <div class="cmv-box"><small>Preço 30%</small><br><b id="res-30">R$ 0,00</b></div>
-                    <div class="cmv-box" id="res-cmv-real-box" style="background: var(--dark); color: white;">
-                        <small>CMV Real</small><br><b id="res-cmv-real">0%</b>
-                    </div>
-                </div>
-
-                <div id="ft-historico-container" class="card hidden">
-                    <label>Histórico</label>
-                    <div id="ft-historico-lista" class="history-list"></div>
-                </div>
-
-                <button class="btn-primary" onclick="salvarLanche()">💾 SALVAR RECEITA</button>
-                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Cancelar</button>
+                <button class="btn-primary" onclick="salvarLanche()">💾 SALVAR AGORA</button>
+                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Voltar</button>
             </div>
 
             <div id="screen-insumos" class="screen hidden">
@@ -159,14 +78,8 @@
 
             <div id="screen-form-insumo" class="screen hidden">
                 <h3>Novo Insumo</h3>
-                <div class="card" style="margin-top:15px">
-                    <label>Nome</label><input type="text" id="in-nome">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:2"><label>Preço</label><input type="number" id="in-preco" step="0.01"></div>
-                        <div style="flex:1"><label>Un.</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="salvarInsumo()">Salvar</button>
+                <div class="card"><label>Nome</label><input type="text" id="in-nome"><label>Preço</label><input type="number" id="in-preco" step="0.01"><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
+                <button class="btn-primary" onclick="salvarInsumo()">Salvar no Banco</button>
             </div>
         </div>
 
@@ -177,260 +90,102 @@
         </div>
     </div>
 
-    <div id="print-section">
-        <div class="p-header">
-            <div><h1 id="p-nome"></h1><span id="p-tipo"></span></div>
-            <div style="text-align:right"><h2>CHEF GG</h2><div id="p-data"></div></div>
-        </div>
-        <div class="p-financial-box">
-            <div><label>Custo Unit.</label><b id="p-custo"></b></div>
-            <div><label>Venda</label><b id="p-venda"></b></div>
-            <div><label>CMV</label><b id="p-cmv"></b></div>
-        </div>
-        <img id="p-img" class="p-img-main">
-        <h3>Ingredientes</h3>
-        <table class="p-table"><thead><tr><th>Qtd</th><th>Item</th><th>Custo</th></tr></thead><tbody id="p-lista-ing"></tbody></table>
-        <h3>Preparo</h3><div id="p-lista-passos"></div>
-        <div style="margin-top:20px"><strong>Obs:</strong> <span id="p-obs"></span></div>
-        <div id="p-hist-lista" style="font-size:10px; color:#777; margin-top:30px; border-top:1px solid #ddd"></div>
-    </div>
-
     <script>
-        // Inicialização Segura
-        let insumos = JSON.parse(localStorage.getItem('cgg_ins')) || [];
-        let lanches = JSON.parse(localStorage.getItem('cgg_lan')) || [];
-        let tipos = ['Prato Principal', 'Entradas', 'Bebidas', 'Sobremesas'];
-        
-        let editingId = null;
+        // CONFIGURAÇÃO DO FIREBASE (Sincronizado com seus prints)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk",
+            authDomain: "chef-gg-pro.firebaseapp.com",
+            projectId: "chef-gg-pro",
+            storageBucket: "chef-gg-pro.firebasestorage.app",
+            messagingSenderId: "183718681004",
+            appId: "1:183718681004:web:bdd4749c8b4c904cd6c209",
+            measurementId: "G-2BGV2M57TP"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let insumos = [];
+        let lanches = [];
         let ingredientesTemporarios = [];
-        let passosTemporarios = [];
-        let base64Image = "";
+
+        async function carregarDados() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            try {
+                const insSnap = await db.collection('insumos').get();
+                insumos = insSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const lanSnap = await db.collection('receitas').get();
+                lanches = lanSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                atualizarDashboard(); renderInsumos(); renderLanches(); popularSeletorInsumos();
+            } catch (e) { console.error(e); }
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        async function salvarLanche() {
+            const nome = document.getElementById('ft-nome').value;
+            if(!nome) return alert("Dê um nome!");
+            try {
+                await db.collection('receitas').add({
+                    nome,
+                    venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
+                    ingredientes: ingredientesTemporarios,
+                    dataUpdate: new Date().getTime()
+                });
+                alert("Salvo na Nuvem!"); carregarDados(); navegar('screen-lanches');
+            } catch(e) { alert("Erro ao salvar: Verifique se ativou as REGRAS no Firebase."); }
+        }
+
+        async function salvarInsumo() {
+            const nome = document.getElementById('in-nome').value;
+            const valor = parseFloat(document.getElementById('in-preco').value);
+            if(!nome || !valor) return alert("Preencha tudo!");
+            try {
+                await db.collection('insumos').add({ nome, valor, unidade: document.getElementById('in-un').value });
+                carregarDados(); navegar('screen-insumos');
+            } catch(e) { alert("Erro ao salvar insumo."); }
+        }
 
         function navegar(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-            if(id === 'screen-home') atualizarDashboard();
-            if(id === 'screen-insumos') renderInsumos();
-            if(id === 'screen-lanches') renderLanches();
-            if(id === 'screen-ficha') popularSeletorInsumos();
         }
 
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    base64Image = e.target.result;
-                    document.getElementById('ft-img-preview').src = base64Image;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // --- FUNÇÃO DE SALVAR COM PROTEÇÃO TOTAL ---
-        function salvarLanche() {
-            try {
-                const nome = document.getElementById('ft-nome').value;
-                if (!nome) { alert("O nome da receita é obrigatório!"); return; }
-
-                const dataAtual = new Date().toLocaleString('pt-BR');
-                const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
-                const venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
-                const status = document.getElementById('ft-status').value;
-                const obs = document.getElementById('ft-obs').value;
-                const tipo = document.getElementById('ft-tipo').value;
-
-                // Calcula custo total
-                const custoTotal = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
-                const custoUnitario = custoTotal / rendimento;
-
-                const lancheObj = {
-                    id: editingId || Date.now(),
-                    nome,
-                    status,
-                    venda,
-                    rendimento,
-                    tipo,
-                    custo: custoUnitario,
-                    ingredientes: [...ingredientesTemporarios],
-                    passos: [...passosTemporarios],
-                    obs,
-                    imagem: base64Image,
-                    historico: []
-                };
-
-                if (editingId) {
-                    const idx = lanches.findIndex(x => x.id == editingId);
-                    if (idx !== -1) {
-                        const antigo = lanches[idx];
-                        lancheObj.historico = Array.isArray(antigo.historico) ? antigo.historico : [];
-                        
-                        let logs = [];
-                        if (antigo.nome !== lancheObj.nome) logs.push("Nome alterado");
-                        if (antigo.venda != lancheObj.venda) logs.push(`Preço: ${antigo.venda} -> ${lancheObj.venda}`);
-                        if (antigo.status !== lancheObj.status) logs.push(`Status: ${antigo.status} -> ${lancheObj.status}`);
-                        
-                        if (logs.length > 0) lancheObj.historico.push({ data: dataAtual, msg: logs.join(" | ") });
-                        lanches[idx] = lancheObj;
-                    }
-                } else {
-                    lancheObj.historico.push({ data: dataAtual, msg: "Ficha criada" });
-                    lanches.push(lancheObj);
-                }
-
-                localStorage.setItem('cgg_lan', JSON.stringify(lanches));
-                alert("Salvo com sucesso!");
-                navegar('screen-lanches');
-
-            } catch (error) {
-                console.error(error);
-                alert("ERRO AO SALVAR: " + error.message + "\n\nVerifique se a imagem não é muito grande.");
-            }
-        }
-
-        // --- RENDERIZAR LISTA ---
         function renderLanches() {
-            const container = document.getElementById('list-lanches');
-            if (!lanches.length) {
-                container.innerHTML = "<p style='text-align:center; padding:20px; color:#999'>Nenhuma receita.</p>";
-                return;
-            }
-            container.innerHTML = lanches.map(l => `
-                <div class="card" style="display:flex; align-items:center; padding:10px">
-                    <img src="${l.imagem || 'https://via.placeholder.com/50'}" class="list-img">
-                    <div style="flex:1">
-                        <strong>${l.nome}</strong><br>
-                        <span class="badge status-${l.status || 'ativo'}">${l.status || 'ativo'}</span>
-                    </div>
-                    <div style="display:flex; gap:5px">
-                        <button onclick="editarLanche(${l.id})" style="background:#eee; padding:8px; border-radius:8px">📝</button>
-                        <button onclick="imprimirFicha(${l.id})" style="background:#eee; padding:8px; border-radius:8px">🖨️</button>
-                    </div>
-                </div>
+            document.getElementById('list-lanches').innerHTML = lanches.map(l => `
+                <div class="card"><strong>${l.nome}</strong> - R$ ${l.venda.toFixed(2)}</div>
             `).join('');
         }
 
-        function editarLanche(id) {
-            editingId = id;
-            const l = lanches.find(x => x.id == id);
-            if (!l) return;
-
-            document.getElementById('ft-titulo-form').innerText = "Editar Receita";
-            document.getElementById('ft-nome').value = l.nome;
-            document.getElementById('ft-status').value = l.status || 'ativo';
-            document.getElementById('ft-venda-manual').value = l.venda || 0;
-            document.getElementById('ft-rendimento').value = l.rendimento || 1;
-            document.getElementById('ft-obs').value = l.obs || "";
-            base64Image = l.imagem || "";
-            document.getElementById('ft-img-preview').src = base64Image;
-
-            ingredientesTemporarios = [...(l.ingredientes || [])];
-            passosTemporarios = [...(l.passos || [])];
-
-            const hCont = document.getElementById('ft-historico-container');
-            hCont.classList.remove('hidden');
-            document.getElementById('ft-historico-lista').innerHTML = (l.historico || []).slice().reverse().map(h => `
-                <div class="history-item"><b>${h.data}</b>: ${h.msg}</div>
+        function renderInsumos() {
+            document.getElementById('list-insumos').innerHTML = insumos.map(i => `
+                <div class="card"><b>${i.nome}</b> - R$ ${i.valor.toFixed(2)}/${i.unidade}</div>
             `).join('');
-
-            renderItensFicha();
-            renderPassos();
-            navegar('screen-ficha');
         }
 
-        function abrirNovaFicha() {
-            editingId = null;
-            ingredientesTemporarios = [];
-            passosTemporarios = [];
-            base64Image = "";
-            document.getElementById('ft-titulo-form').innerText = "Nova Receita";
-            document.getElementById('ft-img-preview').src = "";
-            document.getElementById('ft-historico-container').classList.add('hidden');
-            document.getElementById('ft-nome').value = "";
-            document.getElementById('ft-venda-manual').value = "";
-            document.getElementById('ft-rendimento').value = 1;
-            document.getElementById('ft-obs').value = "";
-            renderItensFicha();
-            renderPassos();
-            navegar('screen-ficha');
-        }
-
-        // --- RESTO DAS FUNÇÕES ---
         function popularSeletorInsumos() {
-            document.getElementById('ft-tipo').innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
             document.getElementById('ft-select-insumo').innerHTML = insumos.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
         }
 
         function addIngredienteFicha() {
             const id = document.getElementById('ft-select-insumo').value;
-            const qtd = parseFloat(document.getElementById('ft-qtd').value);
             const ins = insumos.find(x => x.id == id);
-            if (!qtd || !ins) return;
-            const custoItem = ins.valor * qtd;
-            ingredientesTemporarios.push({ nome: ins.nome, qtd, un: ins.unidade, custo: custoItem });
-            renderItensFicha();
-            document.getElementById('ft-qtd').value = "";
-        }
-
-        function renderItensFicha() {
-            const total = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
-            const rend = parseFloat(document.getElementById('ft-rendimento').value) || 1;
-            document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map((i, idx) => `
-                <div style="display:flex; justify-content:space-between; font-size:12px; border-bottom:1px solid #eee; padding:5px 0">
-                    <span>${i.qtd}${i.un} ${i.nome}</span>
-                    <span>R$ ${i.custo.toFixed(2)} <button onclick="ingredientesTemporarios.splice(${idx},1);renderItensFicha()" style="color:red; background:none">✕</button></span>
-                </div>
-            `).join('');
-            
-            // Cálculos Rápidos
-            const custoU = total / rend;
-            const venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
-            document.getElementById('res-35').innerText = "R$ " + (custoU / 0.35).toFixed(2);
-            document.getElementById('res-30').innerText = "R$ " + (custoU / 0.30).toFixed(2);
-            document.getElementById('res-cmv-real').innerText = venda > 0 ? ((custoU / venda) * 100).toFixed(1) + "%" : "0%";
-        }
-
-        function addPassoFicha() {
-            const val = document.getElementById('ft-passo-input').value;
-            if (val) { passosTemporarios.push(val); document.getElementById('ft-passo-input').value = ""; renderPassos(); }
-        }
-
-        function renderPassos() {
-            document.getElementById('ft-lista-passos').innerHTML = passosTemporarios.map((p, i) => `
-                <div style="font-size:12px; background:#f9f9f9; padding:5px; margin-bottom:5px; border-radius:4px">
-                    ${i + 1}. ${p} <button onclick="passosTemporarios.splice(${i},1);renderPassos()" style="float:right; color:red; background:none">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function imprimirFicha(id) {
-            const l = lanches.find(x => x.id == id);
-            if (!l) return;
-            document.getElementById('p-nome').innerText = l.nome;
-            document.getElementById('p-tipo').innerText = l.tipo;
-            document.getElementById('p-custo').innerText = "R$ " + l.custo.toFixed(2);
-            document.getElementById('p-venda').innerText = "R$ " + l.venda.toFixed(2);
-            document.getElementById('p-cmv').innerText = l.venda > 0 ? ((l.custo / l.venda) * 100).toFixed(1) + "%" : "0%";
-            document.getElementById('p-data').innerText = new Date().toLocaleDateString();
-            document.getElementById('p-img').src = l.imagem || "";
-            document.getElementById('p-lista-ing').innerHTML = l.ingredientes.map(i => `<tr><td>${i.qtd}${i.un}</td><td>${i.nome}</td><td>R$ ${i.custo.toFixed(2)}</td></tr>`).join('');
-            document.getElementById('p-lista-passos').innerHTML = l.passos.map((p, i) => `<div>${i + 1}. ${p}</div>`).join('');
-            document.getElementById('p-obs').innerText = l.obs || "";
-            document.getElementById('p-hist-lista').innerHTML = "Logs: " + l.historico.map(h => `[${h.data}] ${h.msg}`).join(' | ');
-            setTimeout(() => window.print(), 500);
-        }
-
-        function salvarInsumo() {
-            const n = document.getElementById('in-nome').value;
-            const v = parseFloat(document.getElementById('in-preco').value);
-            if (n && v) {
-                insumos.push({ id: Date.now(), nome: n, valor: v, unidade: document.getElementById('in-un').value });
-                localStorage.setItem('cgg_ins', JSON.stringify(insumos));
-                navegar('screen-insumos');
+            const qtd = parseFloat(document.getElementById('ft-qtd').value);
+            if(ins && qtd) {
+                ingredientesTemporarios.push({ nome: ins.nome, qtd, custo: ins.valor * qtd });
+                document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map(i => `<div>${i.qtd}x ${i.nome}</div>`).join('');
             }
         }
 
-        function renderInsumos() {
-            document.getElementById('list-insumos').innerHTML = insumos.map(i => `<div class="card"><b>${i.nome}</b> - R$ ${i.valor.toFixed(2)}/${i.unidade}</div>`).join('');
+        function atualizarDashboard() {
+            document.getElementById('count-insumos').innerText = insumos.length;
+            document.getElementById('count-lanches').innerText = lanches.length;
+        }
+
+        function abrirNovaFicha() {
+            ingredientesTemporarios = [];
+            document.getElementById('ft-nome').value = "";
+            document.getElementById('ft-lista-itens').innerHTML = "";
+            navegar('screen-ficha');
         }
 
         function abrirFormInsumo() {
@@ -439,12 +194,7 @@
             navegar('screen-form-insumo');
         }
 
-        function atualizarDashboard() {
-            document.getElementById('count-insumos').innerText = insumos.length;
-            document.getElementById('count-lanches').innerText = lanches.length;
-        }
-
-        navegar('screen-home');
+        carregarDados();
     </script>
 </body>
 </html>
