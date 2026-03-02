@@ -3,44 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Cloud - v7 Final</title>
+    <title>Chef GG Pro - Gestão Elite Cloud</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff; --text-main: #334155; }
+        :root {
+            --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --warning: #f59e0b;
+            --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff;
+            --text-main: #334155; --text-muted: #64748b;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--light); color: var(--text-main); }
-        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); position: relative; padding-bottom: 80px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        body { font-family: 'Inter', sans-serif; background: var(--light); color: var(--text-main); line-height: 1.6; }
+
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 80px; }
         .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
         .content { padding: 15px; }
         .hidden { display: none !important; }
+
         .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; }
-        button { cursor: pointer; border: none; font-weight: 600; transition: 0.2s; border-radius: 8px; }
-        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; font-size: 16px; }
-        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; font-size: 13px; }
-        .btn-small { padding: 10px; background: var(--dark); color: white; }
-        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; }
-        .list-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; margin-right: 12px; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; padding: 10px 0; }
-        .nav-item { flex: 1; text-align: center; background: none; color: #64748b; font-size: 10px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; background: white; font-family: inherit; }
+        
+        button { cursor: pointer; border: none; font-family: 'Inter', sans-serif; font-weight: 600; transition: 0.2s; }
+        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; margin-top: 10px; }
+        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-main); }
+        .btn-small { padding: 12px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; flex-shrink: 0; }
+        
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; color: white; }
+        .status-ativo { background: var(--success); }
+        .status-inativo { background: var(--text-muted); }
+        .status-teste { background: var(--warning); }
+
+        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; border: 1px solid var(--border); }
+        .list-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; margin-right: 12px; border: 1px solid var(--border); }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .nav-item { text-align: center; background: none; color: var(--text-muted); font-size: 10px; flex: 1; border: none; }
         .nav-item.active { color: var(--primary); }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+
+        .cmv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .cmv-box { background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; border: 1px solid var(--border); }
+
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+
+        @media print {
+            .app-container, .nav-bar { display: none !important; }
+            #print-section { display: block !important; }
+        }
+        #print-section { display: none; font-family: sans-serif; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><span>Sincronizando com a Nuvem...</span></div>
+    <div id="loading-overlay"><strong>Sincronizando...</strong><p>Aguarde um momento</p></div>
 
     <div class="app-container">
-        <div class="header"><h2>Chef GG Cloud</h2></div>
+        <div class="header"><h2>Chef GG Pro Cloud</h2></div>
 
         <div class="content">
             <div id="screen-home" class="screen">
-                <div class="card"><h3>Dashboard Global</h3><p>Dados salvos na conta <b>chef-gg-pro</b></p></div>
+                <div class="card"><h3>Dashboard Cloud</h3><p>Conectado ao Firebase.</p></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="card" style="text-align: center;"><small>Insumos</small><h2 id="count-insumos">0</h2></div>
                     <div class="card" style="text-align: center;"><small>Receitas</small><h2 id="count-lanches">0</h2></div>
@@ -49,17 +74,32 @@
 
             <div id="screen-lanches" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                    <h3>Minhas Receitas</h3>
+                    <h3>Fichas Técnicas</h3>
                     <button class="btn-outline" onclick="abrirNovaFicha()">+ Criar</button>
                 </div>
                 <div id="list-lanches"></div>
             </div>
 
             <div id="screen-ficha" class="screen hidden">
-                <h3>Ficha Técnica</h3>
-                <div class="card"><label>Nome</label><input type="text" id="ft-nome"><label>Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01"></div>
+                <h3 id="ft-titulo-form">Ficha Técnica</h3>
+                <div class="card"><label>Imagem</label><img id="ft-img-preview" class="img-preview"><input type="file" accept="image/*" onchange="previewImage(this)"></div>
+                
                 <div class="card">
-                    <label>Adicionar Ingrediente</label>
+                    <label>Nome</label><input type="text" id="ft-nome">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1"><label>Situação</label>
+                            <select id="ft-status">
+                                <option value="ativo">Ativo</option>
+                                <option value="teste">Em Teste</option>
+                                <option value="inativo">Inativo</option>
+                            </select>
+                        </div>
+                        <div style="flex:1"><label>Preço Venda</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCalculosCMV()"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <label>Ingredientes</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <select id="ft-select-insumo" style="flex:3; margin-bottom:0;"></select>
                         <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin-bottom:0;">
@@ -67,19 +107,35 @@
                     </div>
                     <div id="ft-lista-itens"></div>
                 </div>
-                <button class="btn-primary" onclick="salvarLanche()">💾 SALVAR AGORA</button>
-                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Voltar</button>
+
+                <div class="card">
+                    <label>Modo de Preparo</label>
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <input type="text" id="ft-passo-input" placeholder="Passo..." style="margin-bottom:0;">
+                        <button onclick="addPassoFicha()" class="btn-small" style="background:var(--primary)">+</button>
+                    </div>
+                    <div id="ft-lista-passos"></div>
+                </div>
+
+                <div class="cmv-grid">
+                    <div class="cmv-box"><small>35%</small><br><b id="res-35">R$ 0,00</b></div>
+                    <div class="cmv-box"><small>30%</small><br><b id="res-30">R$ 0,00</b></div>
+                    <div class="cmv-box" id="res-cmv-real-box"><small>CMV Real</small><br><b id="res-cmv-real">0%</b></div>
+                </div>
+
+                <button class="btn-primary" onclick="salvarLanche()">💾 SALVAR NA NUVEM</button>
+                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Descartar</button>
             </div>
 
             <div id="screen-insumos" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Insumos</h3><button class="btn-outline" onclick="abrirFormInsumo()">+ Novo</button></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Estoque</h3><button class="btn-outline" onclick="abrirFormInsumo()">+ Novo</button></div>
                 <div id="list-insumos"></div>
             </div>
 
             <div id="screen-form-insumo" class="screen hidden">
                 <h3>Novo Insumo</h3>
-                <div class="card"><label>Nome</label><input type="text" id="in-nome"><label>Preço</label><input type="number" id="in-preco" step="0.01"><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
-                <button class="btn-primary" onclick="salvarInsumo()">Salvar no Banco</button>
+                <div class="card"><label>Nome</label><input type="text" id="in-nome"><label>Preço</label><input type="number" id="in-preco" step="0.01"><label>Un.</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
+                <button class="btn-primary" onclick="salvarInsumo()">Salvar Insumo</button>
             </div>
         </div>
 
@@ -90,16 +146,25 @@
         </div>
     </div>
 
+    <div id="print-section">
+        <h1 id="p-nome"></h1>
+        <hr>
+        <p><strong>Custo:</strong> <span id="p-custo"></span> | <strong>Venda:</strong> <span id="p-venda"></span></p>
+        <h3>Ingredientes</h3>
+        <ul id="p-lista-ing"></ul>
+        <h3>Modo de Preparo</h3>
+        <div id="p-lista-passos"></div>
+    </div>
+
     <script>
-        // CONFIGURAÇÃO DO FIREBASE (Sincronizado com seus prints)
+        // CONFIGURAÇÃO DO SEU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk",
             authDomain: "chef-gg-pro.firebaseapp.com",
             projectId: "chef-gg-pro",
             storageBucket: "chef-gg-pro.firebasestorage.app",
             messagingSenderId: "183718681004",
-            appId: "1:183718681004:web:bdd4749c8b4c904cd6c209",
-            measurementId: "G-2BGV2M57TP"
+            appId: "1:183718681004:web:bdd4749c8b4c904cd6c209"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -107,7 +172,10 @@
 
         let insumos = [];
         let lanches = [];
+        let editingId = null;
         let ingredientesTemporarios = [];
+        let passosTemporarios = [];
+        let base64Image = "";
 
         async function carregarDados() {
             document.getElementById('loading-overlay').style.display = 'flex';
@@ -116,7 +184,11 @@
                 insumos = insSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const lanSnap = await db.collection('receitas').get();
                 lanches = lanSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                atualizarDashboard(); renderInsumos(); renderLanches(); popularSeletorInsumos();
+                
+                atualizarDashboard();
+                renderInsumos();
+                renderLanches();
+                popularSeletorInsumos();
             } catch (e) { console.error(e); }
             document.getElementById('loading-overlay').style.display = 'none';
         }
@@ -124,35 +196,65 @@
         async function salvarLanche() {
             const nome = document.getElementById('ft-nome').value;
             if(!nome) return alert("Dê um nome!");
+            
+            const custoTotal = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
+            
+            const lancheObj = {
+                nome,
+                status: document.getElementById('ft-status').value,
+                venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
+                custo: custoTotal,
+                ingredientes: ingredientesTemporarios,
+                passos: passosTemporarios,
+                imagem: base64Image,
+                dataUpdate: new Date().getTime()
+            };
+
             try {
-                await db.collection('receitas').add({
-                    nome,
-                    venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
-                    ingredientes: ingredientesTemporarios,
-                    dataUpdate: new Date().getTime()
-                });
-                alert("Salvo na Nuvem!"); carregarDados(); navegar('screen-lanches');
-            } catch(e) { alert("Erro ao salvar: Verifique se ativou as REGRAS no Firebase."); }
+                if(editingId) {
+                    await db.collection('receitas').doc(editingId).update(lancheObj);
+                } else {
+                    await db.collection('receitas').add(lancheObj);
+                }
+                alert("Sincronizado na Nuvem!");
+                carregarDados();
+                navegar('screen-lanches');
+            } catch(e) { alert("Erro ao salvar."); }
         }
 
         async function salvarInsumo() {
-            const nome = document.getElementById('in-nome').value;
-            const valor = parseFloat(document.getElementById('in-preco').value);
-            if(!nome || !valor) return alert("Preencha tudo!");
+            const n = document.getElementById('in-nome').value;
+            const v = parseFloat(document.getElementById('in-preco').value);
+            if(!n || !v) return;
             try {
-                await db.collection('insumos').add({ nome, valor, unidade: document.getElementById('in-un').value });
-                carregarDados(); navegar('screen-insumos');
-            } catch(e) { alert("Erro ao salvar insumo."); }
+                await db.collection('insumos').add({ nome: n, valor: v, unidade: document.getElementById('in-un').value });
+                carregarDados();
+                navegar('screen-insumos');
+            } catch(e) { alert("Erro ao salvar."); }
         }
 
         function navegar(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { base64Image = e.target.result; document.getElementById('ft-img-preview').src = base64Image; };
+                reader.readAsDataURL(input.files[0]);
+            }
         }
 
         function renderLanches() {
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
-                <div class="card"><strong>${l.nome}</strong> - R$ ${l.venda.toFixed(2)}</div>
+                <div class="card" style="display:flex; align-items:center;">
+                    <img src="${l.imagem || ''}" class="list-img">
+                    <div style="flex:1"><strong>${l.nome}</strong><br><small>Custo: R$ ${l.custo.toFixed(2)}</small></div>
+                    <button onclick="editarLanche('${l.id}')">📝</button>
+                    <button onclick="imprimirFicha('${l.id}')">🖨️</button>
+                </div>
             `).join('');
         }
 
@@ -171,9 +273,71 @@
             const ins = insumos.find(x => x.id == id);
             const qtd = parseFloat(document.getElementById('ft-qtd').value);
             if(ins && qtd) {
-                ingredientesTemporarios.push({ nome: ins.nome, qtd, custo: ins.valor * qtd });
-                document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map(i => `<div>${i.qtd}x ${i.nome}</div>`).join('');
+                ingredientesTemporarios.push({ nome: ins.nome, qtd, un: ins.unidade, custo: ins.valor * qtd });
+                renderItensFicha();
+                calcularCalculosCMV();
             }
+        }
+
+        function renderItensFicha() {
+            document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map((i, idx) => `
+                <div style="font-size:12px; border-bottom:1px solid #eee; padding:5px; display:flex; justify-content:space-between">
+                    ${i.qtd}${i.un} ${i.nome} - R$ ${i.custo.toFixed(2)}
+                    <button onclick="ingredientesTemporarios.splice(${idx},1);renderItensFicha();calcularCalculosCMV()">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addPassoFicha() {
+            const val = document.getElementById('ft-passo-input').value;
+            if(val) { passosTemporarios.push(val); document.getElementById('ft-passo-input').value = ''; renderPassos(); }
+        }
+
+        function renderPassos() {
+            document.getElementById('ft-lista-passos').innerHTML = passosTemporarios.map((p, idx) => `
+                <div style="font-size:12px; background:#f1f5f9; margin-bottom:4px; padding:4px;">${idx+1}. ${p}</div>
+            `).join('');
+        }
+
+        function calcularCalculosCMV() {
+            const venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
+            const custo = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
+            
+            document.getElementById('res-35').innerText = `R$ ${(custo / 0.35).toFixed(2)}`;
+            document.getElementById('res-30').innerText = `R$ ${(custo / 0.30).toFixed(2)}`;
+            
+            if(venda > 0) {
+                const cmv = (custo / venda) * 100;
+                document.getElementById('res-cmv-real').innerText = `${cmv.toFixed(1)}%`;
+                document.getElementById('res-cmv-real-box').style.background = cmv > 35 ? 'var(--danger)' : 'var(--dark)';
+                document.getElementById('res-cmv-real-box').style.color = 'white';
+            }
+        }
+
+        function editarLanche(id) {
+            editingId = id;
+            const l = lanches.find(x => x.id == id);
+            document.getElementById('ft-nome').value = l.nome;
+            document.getElementById('ft-status').value = l.status || 'ativo';
+            document.getElementById('ft-venda-manual').value = l.venda;
+            base64Image = l.imagem;
+            document.getElementById('ft-img-preview').src = l.imagem;
+            ingredientesTemporarios = l.ingredientes || [];
+            passosTemporarios = l.passos || [];
+            renderItensFicha();
+            renderPassos();
+            calcularCalculosCMV();
+            navegar('screen-ficha');
+        }
+
+        function imprimirFicha(id) {
+            const l = lanches.find(x => x.id == id);
+            document.getElementById('p-nome').innerText = l.nome;
+            document.getElementById('p-custo').innerText = `R$ ${l.custo.toFixed(2)}`;
+            document.getElementById('p-venda').innerText = `R$ ${l.venda.toFixed(2)}`;
+            document.getElementById('p-lista-ing').innerHTML = l.ingredientes.map(i => `<li>${i.qtd}${i.un} ${i.nome}</li>`).join('');
+            document.getElementById('p-lista-passos').innerHTML = l.passos.map(p => `<p>${p}</p>`).join('');
+            window.print();
         }
 
         function atualizarDashboard() {
@@ -182,17 +346,13 @@
         }
 
         function abrirNovaFicha() {
-            ingredientesTemporarios = [];
-            document.getElementById('ft-nome').value = "";
-            document.getElementById('ft-lista-itens').innerHTML = "";
-            navegar('screen-ficha');
+            editingId = null; ingredientesTemporarios = []; passosTemporarios = []; base64Image = "";
+            document.getElementById('ft-nome').value = '';
+            document.getElementById('ft-img-preview').src = '';
+            renderItensFicha(); renderPassos(); navegar('screen-ficha');
         }
 
-        function abrirFormInsumo() {
-            document.getElementById('in-nome').value = "";
-            document.getElementById('in-preco').value = "";
-            navegar('screen-form-insumo');
-        }
+        function abrirFormInsumo() { navegar('screen-form-insumo'); }
 
         carregarDados();
     </script>
