@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - Gestão Elite Cloud</title>
+    <title>Chef GG Pro - Gestão Elite Cloud v6</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
@@ -85,7 +85,14 @@
                 <div class="card"><label>Imagem</label><img id="ft-img-preview" class="img-preview"><input type="file" accept="image/*" onchange="previewImage(this)"></div>
                 
                 <div class="card">
-                    <label>Nome</label><input type="text" id="ft-nome">
+                    <label>Nome da Receita</label><input type="text" id="ft-nome">
+                    
+                    <label>Tipo de Prato / Categoria</label>
+                    <div style="display: flex; gap: 5px; margin-bottom: 12px;">
+                        <select id="ft-tipo" style="margin-bottom:0;"></select>
+                        <button onclick="navegar('screen-categorias')" class="btn-small" style="background:var(--primary)">+</button>
+                    </div>
+
                     <div style="display: flex; gap: 10px;">
                         <div style="flex:1"><label>Situação</label>
                             <select id="ft-status">
@@ -127,6 +134,21 @@
                 <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Descartar</button>
             </div>
 
+            <div id="screen-categorias" class="screen hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                    <h3>Tipos de Pratos</h3>
+                    <button class="btn-outline" onclick="navegar('screen-ficha')">Voltar</button>
+                </div>
+                <div class="card">
+                    <label>Novo Tipo (Ex: Burgers, Sucos)</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="cat-novo-nome" style="margin-bottom:0;">
+                        <button onclick="salvarCategoria()" class="btn-small" style="background:var(--success)">+</button>
+                    </div>
+                </div>
+                <div id="list-categorias"></div>
+            </div>
+
             <div id="screen-insumos" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Estoque</h3><button class="btn-outline" onclick="abrirFormInsumo()">+ Novo</button></div>
                 <div id="list-insumos"></div>
@@ -157,7 +179,6 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO DO SEU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk",
             authDomain: "chef-gg-pro.firebaseapp.com",
@@ -172,6 +193,7 @@
 
         let insumos = [];
         let lanches = [];
+        let categorias = [];
         let editingId = null;
         let ingredientesTemporarios = [];
         let passosTemporarios = [];
@@ -182,13 +204,23 @@
             try {
                 const insSnap = await db.collection('insumos').get();
                 insumos = insSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
                 const lanSnap = await db.collection('receitas').get();
                 lanches = lanSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const catSnap = await db.collection('categorias').get();
+                categorias = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
+                if(categorias.length === 0) { 
+                    categorias = [{nome: 'Prato Principal'}, {nome: 'Entrada'}, {nome: 'Bebida'}];
+                }
+
                 atualizarDashboard();
                 renderInsumos();
                 renderLanches();
+                renderCategorias();
                 popularSeletorInsumos();
+                popularSeletorCategorias();
             } catch (e) { console.error(e); }
             document.getElementById('loading-overlay').style.display = 'none';
         }
@@ -201,6 +233,7 @@
             
             const lancheObj = {
                 nome,
+                tipo: document.getElementById('ft-tipo').value,
                 status: document.getElementById('ft-status').value,
                 venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
                 custo: custoTotal,
@@ -222,6 +255,16 @@
             } catch(e) { alert("Erro ao salvar."); }
         }
 
+        async function salvarCategoria() {
+            const nome = document.getElementById('cat-novo-nome').value;
+            if(!nome) return;
+            try {
+                await db.collection('categorias').add({ nome });
+                document.getElementById('cat-novo-nome').value = '';
+                carregarDados();
+            } catch(e) { alert("Erro ao salvar categoria."); }
+        }
+
         async function salvarInsumo() {
             const n = document.getElementById('in-nome').value;
             const v = parseFloat(document.getElementById('in-preco').value);
@@ -236,7 +279,6 @@
         function navegar(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         }
 
         function previewImage(input) {
@@ -251,7 +293,10 @@
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
                 <div class="card" style="display:flex; align-items:center;">
                     <img src="${l.imagem || ''}" class="list-img">
-                    <div style="flex:1"><strong>${l.nome}</strong><br><small>Custo: R$ ${l.custo.toFixed(2)}</small></div>
+                    <div style="flex:1">
+                        <strong>${l.nome}</strong><br>
+                        <small>${l.tipo || 'Sem Categoria'} | R$ ${l.custo.toFixed(2)}</small>
+                    </div>
                     <button onclick="editarLanche('${l.id}')">📝</button>
                     <button onclick="imprimirFicha('${l.id}')">🖨️</button>
                 </div>
@@ -264,8 +309,27 @@
             `).join('');
         }
 
+        function renderCategorias() {
+            document.getElementById('list-categorias').innerHTML = categorias.map(c => `
+                <div class="card" style="padding:10px; display:flex; justify-content:space-between">
+                    ${c.nome}
+                    <button onclick="excluirCategoria('${c.id}')" style="color:red; background:none;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function excluirCategoria(id) {
+            if(!id) return;
+            await db.collection('categorias').doc(id).delete();
+            carregarDados();
+        }
+
         function popularSeletorInsumos() {
             document.getElementById('ft-select-insumo').innerHTML = insumos.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
+        }
+
+        function popularSeletorCategorias() {
+            document.getElementById('ft-tipo').innerHTML = categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
         }
 
         function addIngredienteFicha() {
@@ -302,10 +366,8 @@
         function calcularCalculosCMV() {
             const venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
             const custo = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
-            
             document.getElementById('res-35').innerText = `R$ ${(custo / 0.35).toFixed(2)}`;
             document.getElementById('res-30').innerText = `R$ ${(custo / 0.30).toFixed(2)}`;
-            
             if(venda > 0) {
                 const cmv = (custo / venda) * 100;
                 document.getElementById('res-cmv-real').innerText = `${cmv.toFixed(1)}%`;
@@ -318,10 +380,11 @@
             editingId = id;
             const l = lanches.find(x => x.id == id);
             document.getElementById('ft-nome').value = l.nome;
+            document.getElementById('ft-tipo').value = l.tipo || '';
             document.getElementById('ft-status').value = l.status || 'ativo';
             document.getElementById('ft-venda-manual').value = l.venda;
             base64Image = l.imagem;
-            document.getElementById('ft-img-preview').src = l.imagem;
+            document.getElementById('ft-img-preview').src = l.imagem || '';
             ingredientesTemporarios = l.ingredientes || [];
             passosTemporarios = l.passos || [];
             renderItensFicha();
