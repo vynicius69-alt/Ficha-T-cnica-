@@ -30,7 +30,7 @@
         button { cursor: pointer; border: none; font-family: 'Inter', sans-serif; font-weight: 600; transition: 0.2s; }
         .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; margin-top: 10px; }
         .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-main); }
-        .btn-small { padding: 12px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; flex-shrink: 0; }
+        .btn-small { padding: 12px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         
         .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; color: white; }
         .status-ativo { background: var(--success); }
@@ -46,6 +46,8 @@
 
         .cmv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
         .cmv-box { background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; border: 1px solid var(--border); }
+
+        .hist-item { font-size: 10px; padding: 5px; border-bottom: 1px solid #eee; color: var(--text-muted); }
 
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
 
@@ -149,22 +151,55 @@
                 <div id="list-categorias"></div>
             </div>
 
+            <div id="screen-fornecedores" class="screen hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                    <h3>Fornecedores</h3>
+                    <button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button>
+                </div>
+                <div class="card">
+                    <label>Novo Fornecedor</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="forn-novo-nome" style="margin-bottom:0;">
+                        <button onclick="salvarFornecedor()" class="btn-small" style="background:var(--success)">+</button>
+                    </div>
+                </div>
+                <div id="list-fornecedores"></div>
+            </div>
+
             <div id="screen-insumos" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Estoque</h3><button class="btn-outline" onclick="abrirFormInsumo()">+ Novo</button></div>
                 <div id="list-insumos"></div>
             </div>
 
             <div id="screen-form-insumo" class="screen hidden">
-                <h3>Novo Insumo</h3>
-                <div class="card"><label>Nome</label><input type="text" id="in-nome"><label>Preço</label><input type="number" id="in-preco" step="0.01"><label>Un.</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
+                <h3 id="in-titulo-form">Novo Insumo</h3>
+                <div class="card">
+                    <label>Nome</label><input type="text" id="in-nome">
+                    <label>Preço</label><input type="number" id="in-preco" step="0.01">
+                    <label>Un.</label>
+                    <select id="in-un"><option>kg</option><option>un</option><option>lt</option></select>
+                    
+                    <label>Fornecedor</label>
+                    <div style="display: flex; gap: 5px;">
+                        <select id="in-fornecedor" style="margin-bottom:0;"></select>
+                        <button onclick="navegar('screen-fornecedores')" class="btn-small" style="background:var(--primary)">+</button>
+                    </div>
+                </div>
+
+                <div id="in-container-historico" class="card hidden">
+                    <label>Histórico de Alterações</label>
+                    <div id="in-lista-historico"></div>
+                </div>
+
                 <button class="btn-primary" onclick="salvarInsumo()">Salvar Insumo</button>
+                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-insumos')">Cancelar</button>
             </div>
         </div>
 
         <div class="nav-bar">
-            <button class="nav-item active" onclick="navegar('screen-home')">🏠<br>Home</button>
-            <button class="nav-item" onclick="navegar('screen-insumos')">📦<br>Insumos</button>
-            <button class="nav-item" onclick="navegar('screen-lanches')">🍔<br>Fichas</button>
+            <button class="nav-item active" id="nav-home" onclick="navegar('screen-home')">🏠<br>Home</button>
+            <button class="nav-item" id="nav-insumos" onclick="navegar('screen-insumos')">📦<br>Insumos</button>
+            <button class="nav-item" id="nav-lanches" onclick="navegar('screen-lanches')">🍔<br>Fichas</button>
         </div>
     </div>
 
@@ -194,7 +229,9 @@
         let insumos = [];
         let lanches = [];
         let categorias = [];
+        let fornecedores = [];
         let editingId = null;
+        let editingInsumoId = null;
         let ingredientesTemporarios = [];
         let passosTemporarios = [];
         let base64Image = "";
@@ -210,6 +247,9 @@
 
                 const catSnap = await db.collection('categorias').get();
                 categorias = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const fornSnap = await db.collection('fornecedores').get();
+                fornecedores = fornSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 if(categorias.length === 0) { 
                     categorias = [{nome: 'Prato Principal'}, {nome: 'Entrada'}, {nome: 'Bebida'}];
@@ -219,8 +259,10 @@
                 renderInsumos();
                 renderLanches();
                 renderCategorias();
+                renderFornecedores();
                 popularSeletorInsumos();
                 popularSeletorCategorias();
+                popularSeletorFornecedores();
             } catch (e) { console.error(e); }
             document.getElementById('loading-overlay').style.display = 'none';
         }
@@ -265,12 +307,46 @@
             } catch(e) { alert("Erro ao salvar categoria."); }
         }
 
+        async function salvarFornecedor() {
+            const nome = document.getElementById('forn-novo-nome').value;
+            if(!nome) return;
+            try {
+                await db.collection('fornecedores').add({ nome });
+                document.getElementById('forn-novo-nome').value = '';
+                carregarDados();
+            } catch(e) { alert("Erro ao salvar fornecedor."); }
+        }
+
         async function salvarInsumo() {
             const n = document.getElementById('in-nome').value;
             const v = parseFloat(document.getElementById('in-preco').value);
+            const u = document.getElementById('in-un').value;
+            const f = document.getElementById('in-fornecedor').value;
+
             if(!n || !v) return;
+
+            const agora = new Date().toLocaleString();
+            
             try {
-                await db.collection('insumos').add({ nome: n, valor: v, unidade: document.getElementById('in-un').value });
+                if(editingInsumoId) {
+                    const antigo = insumos.find(x => x.id === editingInsumoId);
+                    let hist = antigo.historico || [];
+                    
+                    if(antigo.valor != v || antigo.fornecedor != f) {
+                        hist.push({
+                            data: agora,
+                            detalhe: `Alterado de R$ ${antigo.valor}/${antigo.unidade} (${antigo.fornecedor || 'Sem forn.'}) para R$ ${v}/${u} (${f || 'Sem forn.'})`
+                        });
+                    }
+
+                    await db.collection('insumos').doc(editingInsumoId).update({ 
+                        nome: n, valor: v, unidade: u, fornecedor: f, historico: hist 
+                    });
+                } else {
+                    await db.collection('insumos').add({ 
+                        nome: n, valor: v, unidade: u, fornecedor: f, historico: [{data: agora, detalhe: 'Cadastro Inicial'}] 
+                    });
+                }
                 carregarDados();
                 navegar('screen-insumos');
             } catch(e) { alert("Erro ao salvar."); }
@@ -279,6 +355,12 @@
         function navegar(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
+            
+            // Atualiza estado da nav-bar
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            if(id === 'screen-home') document.getElementById('nav-home').classList.add('active');
+            if(id === 'screen-insumos') document.getElementById('nav-insumos').classList.add('active');
+            if(id === 'screen-lanches') document.getElementById('nav-lanches').classList.add('active');
         }
 
         function previewImage(input) {
@@ -305,7 +387,13 @@
 
         function renderInsumos() {
             document.getElementById('list-insumos').innerHTML = insumos.map(i => `
-                <div class="card"><b>${i.nome}</b> - R$ ${i.valor.toFixed(2)}/${i.unidade}</div>
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <b>${i.nome}</b><br>
+                        <small>R$ ${i.valor.toFixed(2)}/${i.unidade} - ${i.fornecedor || 'Sem Fornecedor'}</small>
+                    </div>
+                    <button onclick="abrirEditarInsumo('${i.id}')">📝</button>
+                </div>
             `).join('');
         }
 
@@ -318,9 +406,24 @@
             `).join('');
         }
 
+        function renderFornecedores() {
+            document.getElementById('list-fornecedores').innerHTML = fornecedores.map(f => `
+                <div class="card" style="padding:10px; display:flex; justify-content:space-between">
+                    ${f.nome}
+                    <button onclick="excluirFornecedor('${f.id}')" style="color:red; background:none;">✕</button>
+                </div>
+            `).join('');
+        }
+
         async function excluirCategoria(id) {
             if(!id) return;
             await db.collection('categorias').doc(id).delete();
+            carregarDados();
+        }
+
+        async function excluirFornecedor(id) {
+            if(!id) return;
+            await db.collection('fornecedores').doc(id).delete();
             carregarDados();
         }
 
@@ -330,6 +433,10 @@
 
         function popularSeletorCategorias() {
             document.getElementById('ft-tipo').innerHTML = categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+        }
+
+        function popularSeletorFornecedores() {
+            document.getElementById('in-fornecedor').innerHTML = fornecedores.map(f => `<option value="${f.nome}">${f.nome}</option>`).join('');
         }
 
         function addIngredienteFicha() {
@@ -393,6 +500,28 @@
             navegar('screen-ficha');
         }
 
+        function abrirEditarInsumo(id) {
+            editingInsumoId = id;
+            const i = insumos.find(x => x.id == id);
+            document.getElementById('in-titulo-form').innerText = "Editar Insumo";
+            document.getElementById('in-nome').value = i.nome;
+            document.getElementById('in-preco').value = i.valor;
+            document.getElementById('in-un').value = i.unidade;
+            document.getElementById('in-fornecedor').value = i.fornecedor || '';
+            
+            // Renderiza histórico
+            const containerHist = document.getElementById('in-container-historico');
+            const listaHist = document.getElementById('in-lista-historico');
+            if(i.historico && i.historico.length > 0) {
+                containerHist.classList.remove('hidden');
+                listaHist.innerHTML = i.historico.map(h => `<div class="hist-item"><b>${h.data}</b>: ${h.detalhe}</div>`).reverse().join('');
+            } else {
+                containerHist.classList.add('hidden');
+            }
+
+            navegar('screen-form-insumo');
+        }
+
         function imprimirFicha(id) {
             const l = lanches.find(x => x.id == id);
             document.getElementById('p-nome').innerText = l.nome;
@@ -415,7 +544,14 @@
             renderItensFicha(); renderPassos(); navegar('screen-ficha');
         }
 
-        function abrirFormInsumo() { navegar('screen-form-insumo'); }
+        function abrirFormInsumo() { 
+            editingInsumoId = null;
+            document.getElementById('in-titulo-form').innerText = "Novo Insumo";
+            document.getElementById('in-nome').value = '';
+            document.getElementById('in-preco').value = '';
+            document.getElementById('in-container-historico').classList.add('hidden');
+            navegar('screen-form-insumo'); 
+        }
 
         carregarDados();
     </script>
