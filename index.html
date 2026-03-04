@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - Gestão Elite Cloud v6.1</title>
+    <title>Chef GG Pro - Gestão Elite Cloud v6.2</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
@@ -104,9 +104,9 @@
                 </div>
 
                 <div class="card">
-                    <label>Ingredientes (Insumo - Marca - Fornecedor)</label>
+                    <label>Adicionar Ingrediente ou Sub-receita</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                        <select id="ft-select-insumo" style="flex:3; margin-bottom:0; font-size: 12px;"></select>
+                        <select id="ft-select-insumo" style="flex:3; margin-bottom:0; font-size: 11px;"></select>
                         <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin-bottom:0;">
                         <button onclick="addIngredienteFicha()" class="btn-small" style="background:var(--success)">+</button>
                     </div>
@@ -159,30 +159,25 @@
                 <h3 id="in-titulo-form">Novo Insumo</h3>
                 <div class="card">
                     <label>Nome do Insumo</label><input type="text" id="in-nome">
-                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div><label>Preço</label><input type="number" id="in-preco" step="0.01"></div>
                         <div><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
                     </div>
-
                     <label>Marca</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-                        <select id="in-marca" style="margin-bottom:0;"></select>
+                        <select id="in-marca"></select>
                         <button onclick="navegar('screen-marcas')" class="btn-small" style="background:var(--primary)">+</button>
                     </div>
-
                     <label>Fornecedor</label>
                     <div style="display: flex; gap: 5px;">
-                        <select id="in-fornecedor" style="margin-bottom:0;"></select>
+                        <select id="in-fornecedor"></select>
                         <button onclick="navegar('screen-fornecedores')" class="btn-small" style="background:var(--primary)">+</button>
                     </div>
                 </div>
-
                 <div id="in-container-historico" class="card hidden">
                     <label>Histórico de Atualizações</label>
                     <div id="in-lista-historico" style="max-height: 150px; overflow-y: auto;"></div>
                 </div>
-
                 <button class="btn-primary" onclick="salvarInsumo()">SALVAR INSUMO</button>
                 <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-insumos')">Cancelar</button>
             </div>
@@ -216,15 +211,12 @@
             document.getElementById('loading-overlay').style.display = 'flex';
             try {
                 const [insS, lanS, catS, forS, marS] = await Promise.all([
-                    db.collection('insumos').get(),
-                    db.collection('receitas').get(),
-                    db.collection('categorias').get(),
-                    db.collection('fornecedores').get(),
+                    db.collection('insumos').get(), db.collection('receitas').get(),
+                    db.collection('categorias').get(), db.collection('fornecedores').get(),
                     db.collection('marcas').get()
                 ]);
-
-                insumos = insS.docs.map(d => ({ id: d.id, ...d.data() }));
-                lanches = lanS.docs.map(d => ({ id: d.id, ...d.data() }));
+                insumos = insS.docs.map(d => ({ id: d.id, ...d.data(), isRec: false }));
+                lanches = lanS.docs.map(d => ({ id: d.id, ...d.data(), isRec: true }));
                 categorias = catS.docs.map(d => ({ id: d.id, ...d.data() }));
                 fornecedores = forS.docs.map(d => ({ id: d.id, ...d.data() }));
                 marcas = marS.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -242,210 +234,72 @@
             popularSeletorFornecedores(); popularSeletorMarcas();
         }
 
+        // --- MUDANÇA CHAVE: POPULAR SELETOR MISTURANDO INSUMOS E RECEITAS ---
+        function popularSeletorInsumos() {
+            const select = document.getElementById('ft-select-insumo');
+            let html = '<option value="">Selecione um item...</option>';
+            
+            // Adiciona Insumos Normais
+            html += '<optgroup label="📦 INSUMOS">';
+            insumos.forEach(i => {
+                html += `<option value="INS_${i.id}">${i.nome} (${i.marca || 'S/M'}) - R$ ${i.valor.toFixed(2)}</option>`;
+            });
+            html += '</optgroup>';
+
+            // Adiciona Receitas como Sub-itens
+            html += '<optgroup label="👨‍🍳 SUB-RECEITAS (PRODUÇÃO)">';
+            lanches.forEach(l => {
+                // Aqui o valor de "custo" da receita vira o preço do insumo
+                html += `<option value="REC_${l.id}">[PRODUÇÃO] ${l.nome} - R$ ${l.custo.toFixed(2)}</option>`;
+            });
+            html += '</optgroup>';
+
+            select.innerHTML = html;
+        }
+
+        function addIngredienteFicha() {
+            const val = document.getElementById('ft-select-insumo').value;
+            const qtd = parseFloat(document.getElementById('ft-qtd').value);
+            if(!val || !qtd) return;
+
+            const [tipo, id] = val.split('_');
+            let itemEncontrado;
+
+            if(tipo === 'INS') {
+                itemEncontrado = insumos.find(x => x.id === id);
+                ingredientesTemporarios.push({ 
+                    nome: `${itemEncontrado.nome} (${itemEncontrado.marca})`, 
+                    qtd, un: itemEncontrado.unidade, custo: itemEncontrado.valor * qtd 
+                });
+            } else {
+                itemEncontrado = lanches.find(x => x.id === id);
+                ingredientesTemporarios.push({ 
+                    nome: `[REC] ${itemEncontrado.nome}`, 
+                    qtd, un: 'un', custo: itemEncontrado.custo * qtd 
+                });
+            }
+            renderItensFicha(); calcularCalculosCMV();
+        }
+
+        // --- RESTANTE DAS FUNÇÕES (MANTIDAS E OTIMIZADAS) ---
         async function salvarInsumo() {
-            const n = document.getElementById('in-nome').value;
-            const v = parseFloat(document.getElementById('in-preco').value);
-            const u = document.getElementById('in-un').value;
-            const f = document.getElementById('in-fornecedor').value;
-            const m = document.getElementById('in-marca').value;
-
-            if(!n || !v) return alert("Preencha Nome e Preço!");
-
+            const n = document.getElementById('in-nome').value, v = parseFloat(document.getElementById('in-preco').value);
+            if(!n || isNaN(v)) return alert("Preencha Nome e Preço!");
+            const u = document.getElementById('in-un').value, f = document.getElementById('in-fornecedor').value, m = document.getElementById('in-marca').value;
             const agora = new Date().toLocaleString('pt-BR');
             try {
                 if(editingInsumoId) {
                     const antigo = insumos.find(x => x.id === editingInsumoId);
                     let hist = antigo.historico || [];
-                    
                     if(antigo.valor != v || antigo.fornecedor != f || antigo.marca != m) {
-                        hist.push({
-                            data: agora,
-                            detalhe: `Alt: R$${antigo.valor} (${antigo.marca}/${antigo.fornecedor}) -> R$${v} (${m}/${f})`
-                        });
+                        hist.push({ data: agora, detalhe: `Alt: R$${antigo.valor} (${antigo.marca}/${antigo.fornecedor}) -> R$${v} (${m}/${f})` });
                     }
-
-                    await db.collection('insumos').doc(editingInsumoId).update({ 
-                        nome: n, valor: v, unidade: u, fornecedor: f, marca: m, historico: hist 
-                    });
+                    await db.collection('insumos').doc(editingInsumoId).update({ nome: n, valor: v, unidade: u, fornecedor: f, marca: m, historico: hist });
                 } else {
-                    await db.collection('insumos').add({ 
-                        nome: n, valor: v, unidade: u, fornecedor: f, marca: m, 
-                        historico: [{data: agora, detalhe: 'Cadastro Inicial'}] 
-                    });
+                    await db.collection('insumos').add({ nome: n, valor: v, unidade: u, fornecedor: f, marca: m, historico: [{data: agora, detalhe: 'Cadastro Inicial'}] });
                 }
                 carregarDados(); navegar('screen-insumos');
             } catch(e) { alert("Erro ao salvar."); }
-        }
-
-        // --- FUNÇÕES DE SALVAMENTO AUXILIAR ---
-        async function salvarMarca() {
-            const nome = document.getElementById('marca-novo-nome').value;
-            if(!nome) return;
-            await db.collection('marcas').add({ nome });
-            document.getElementById('marca-novo-nome').value = '';
-            carregarDados();
-        }
-
-        async function salvarFornecedor() {
-            const nome = document.getElementById('forn-novo-nome').value;
-            if(!nome) return;
-            await db.collection('fornecedores').add({ nome });
-            document.getElementById('forn-novo-nome').value = '';
-            carregarDados();
-        }
-
-        async function salvarCategoria() {
-            const nome = document.getElementById('cat-novo-nome').value;
-            if(!nome) return;
-            await db.collection('categorias').add({ nome });
-            document.getElementById('cat-novo-nome').value = '';
-            carregarDados();
-        }
-
-        // --- RENDERIZADORES DE LISTAS ---
-        function renderInsumos() {
-            document.getElementById('list-insumos').innerHTML = insumos.map(i => `
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <b>${i.nome}</b><br>
-                        <small>${i.marca || 'S/M'} - ${i.fornecedor || 'S/F'}<br>R$ ${i.valor.toFixed(2)}/${i.unidade}</small>
-                    </div>
-                    <button onclick="abrirEditarInsumo('${i.id}')">📝</button>
-                </div>
-            `).join('');
-        }
-
-        function popularSeletorInsumos() {
-            // AQUI ESTÁ A MUDANÇA: Nome + Marca + Fornecedor no seletor da Ficha Técnica
-            document.getElementById('ft-select-insumo').innerHTML = insumos.map(i => 
-                `<option value="${i.id}">${i.nome} (${i.marca || 'S/Marca'}) - [${i.fornecedor || 'S/Forn'}]</option>`
-            ).join('');
-        }
-
-        function popularSeletorMarcas() {
-            document.getElementById('in-marca').innerHTML = marcas.map(m => `<option value="${m.nome}">${m.nome}</option>`).join('');
-        }
-
-        function popularSeletorFornecedores() {
-            document.getElementById('in-fornecedor').innerHTML = fornecedores.map(f => `<option value="${f.nome}">${f.nome}</option>`).join('');
-        }
-
-        function popularSeletorCategorias() {
-            document.getElementById('ft-tipo').innerHTML = categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
-        }
-
-        function renderMarcas() {
-            document.getElementById('list-marcas').innerHTML = marcas.map(m => `
-                <div class="card" style="padding:10px; display:flex; justify-content:space-between">${m.nome}
-                    <button onclick="excluirItem('marcas','${m.id}')" style="color:red; background:none;">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function renderFornecedores() {
-            document.getElementById('list-fornecedores').innerHTML = fornecedores.map(f => `
-                <div class="card" style="padding:10px; display:flex; justify-content:space-between">${f.nome}
-                    <button onclick="excluirItem('fornecedores','${f.id}')" style="color:red; background:none;">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function renderCategorias() {
-            document.getElementById('list-categorias').innerHTML = categorias.map(c => `
-                <div class="card" style="padding:10px; display:flex; justify-content:space-between">${c.nome}
-                    <button onclick="excluirItem('categorias','${c.id}')" style="color:red; background:none;">✕</button>
-                </div>
-            `).join('');
-        }
-
-        async function excluirItem(colecao, id) {
-            if(confirm("Deseja excluir este item?")) {
-                await db.collection(colecao).doc(id).delete();
-                carregarDados();
-            }
-        }
-
-        // --- LÓGICA DE NAVEGAÇÃO E EDIÇÃO ---
-        function abrirEditarInsumo(id) {
-            editingInsumoId = id;
-            const i = insumos.find(x => x.id == id);
-            document.getElementById('in-titulo-form').innerText = "Editar Insumo";
-            document.getElementById('in-nome').value = i.nome;
-            document.getElementById('in-preco').value = i.valor;
-            document.getElementById('in-un').value = i.unidade;
-            document.getElementById('in-marca').value = i.marca || '';
-            document.getElementById('in-fornecedor').value = i.fornecedor || '';
-            
-            const containerHist = document.getElementById('in-container-historico');
-            const listaHist = document.getElementById('in-lista-historico');
-            if(i.historico && i.historico.length > 0) {
-                containerHist.classList.remove('hidden');
-                listaHist.innerHTML = i.historico.map(h => `<div class="hist-item"><b>${h.data}</b>: ${h.detalhe}</div>`).reverse().join('');
-            } else { containerHist.classList.add('hidden'); }
-
-            navegar('screen-form-insumo');
-        }
-
-        function abrirFormInsumo() { 
-            editingInsumoId = null;
-            document.getElementById('in-titulo-form').innerText = "Novo Insumo";
-            document.getElementById('in-nome').value = '';
-            document.getElementById('in-preco').value = '';
-            document.getElementById('in-container-historico').classList.add('hidden');
-            navegar('screen-form-insumo'); 
-        }
-
-        function navegar(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            if(id === 'screen-home') document.getElementById('nav-home').classList.add('active');
-            if(id === 'screen-insumos') document.getElementById('nav-insumos').classList.add('active');
-            if(id === 'screen-lanches') document.getElementById('nav-lanches').classList.add('active');
-        }
-
-        // Reutilizando funções do código anterior para Fichas Técnicas
-        function addIngredienteFicha() {
-            const id = document.getElementById('ft-select-insumo').value;
-            const ins = insumos.find(x => x.id == id);
-            const qtd = parseFloat(document.getElementById('ft-qtd').value);
-            if(ins && qtd) {
-                ingredientesTemporarios.push({ 
-                    nome: `${ins.nome} (${ins.marca})`, 
-                    qtd, un: ins.unidade, custo: ins.valor * qtd 
-                });
-                renderItensFicha(); calcularCalculosCMV();
-            }
-        }
-
-        function renderItensFicha() {
-            document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map((i, idx) => `
-                <div style="font-size:12px; border-bottom:1px solid #eee; padding:5px; display:flex; justify-content:space-between">
-                    ${i.qtd}${i.un} ${i.nome} - R$ ${i.custo.toFixed(2)}
-                    <button onclick="ingredientesTemporarios.splice(${idx},1);renderItensFicha();calcularCalculosCMV()">✕</button>
-                </div>
-            `).join('');
-        }
-
-        function renderLanches() {
-            document.getElementById('list-lanches').innerHTML = lanches.map(l => `
-                <div class="card" style="display:flex; align-items:center;">
-                    <img src="${l.imagem || ''}" class="list-img">
-                    <div style="flex:1"><strong>${l.nome}</strong><br><small>${l.tipo} | R$ ${l.custo.toFixed(2)}</small></div>
-                    <button onclick="editarLanche('${l.id}')">📝</button>
-                </div>
-            `).join('');
-        }
-
-        function editarLanche(id) {
-            editingId = id; const l = lanches.find(x => x.id == id);
-            document.getElementById('ft-nome').value = l.nome;
-            document.getElementById('ft-tipo').value = l.tipo || '';
-            document.getElementById('ft-status').value = l.status || 'ativo';
-            document.getElementById('ft-venda-manual').value = l.venda;
-            base64Image = l.imagem; document.getElementById('ft-img-preview').src = l.imagem || '';
-            ingredientesTemporarios = l.ingredientes || []; passosTemporarios = l.passos || [];
-            renderItensFicha(); renderPassos(); calcularCalculosCMV(); navegar('screen-ficha');
         }
 
         async function salvarLanche() {
@@ -458,17 +312,80 @@
                 custo: custoTotal, ingredientes: ingredientesTemporarios, passos: passosTemporarios,
                 imagem: base64Image, dataUpdate: new Date().getTime()
             };
-            if(editingId) await db.collection('receitas').doc(editingId).update(lancheObj);
-            else await db.collection('receitas').add(lancheObj);
-            carregarDados(); navegar('screen-lanches');
+            try {
+                if(editingId) await db.collection('receitas').doc(editingId).update(lancheObj);
+                else await db.collection('receitas').add(lancheObj);
+                carregarDados(); navegar('screen-lanches');
+            } catch(e) { alert("Erro ao salvar ficha."); }
         }
 
+        function renderInsumos() {
+            document.getElementById('list-insumos').innerHTML = insumos.map(i => `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><b>${i.nome}</b><br><small>${i.marca || 'S/M'} - ${i.fornecedor || 'S/F'}<br>R$ ${i.valor.toFixed(2)}/${i.unidade}</small></div>
+                    <button onclick="abrirEditarInsumo('${i.id}')">📝</button>
+                </div>
+            `).join('');
+        }
+
+        function renderLanches() {
+            document.getElementById('list-lanches').innerHTML = lanches.map(l => `
+                <div class="card" style="display:flex; align-items:center;">
+                    <img src="${l.imagem || ''}" class="list-img">
+                    <div style="flex:1"><strong>${l.nome}</strong><br><small>${l.tipo} | Custo: R$ ${l.custo.toFixed(2)}</small></div>
+                    <button onclick="editarLanche('${l.id}')">📝</button>
+                </div>
+            `).join('');
+        }
+
+        // Funções Auxiliares de Interface
+        function navegar(id) { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            if(id.includes('home')) document.getElementById('nav-home').classList.add('active');
+            if(id.includes('insumo')) document.getElementById('nav-insumos').classList.add('active');
+            if(id.includes('lanche') || id === 'screen-ficha') document.getElementById('nav-lanches').classList.add('active');
+        }
+
+        function abrirEditarInsumo(id) {
+            editingInsumoId = id; const i = insumos.find(x => x.id == id);
+            document.getElementById('in-titulo-form').innerText = "Editar Insumo";
+            document.getElementById('in-nome').value = i.nome; document.getElementById('in-preco').value = i.valor;
+            document.getElementById('in-un').value = i.unidade; document.getElementById('in-marca').value = i.marca || '';
+            document.getElementById('in-fornecedor').value = i.fornecedor || '';
+            const cont = document.getElementById('in-container-historico'), list = document.getElementById('in-lista-historico');
+            if(i.historico) { cont.classList.remove('hidden'); list.innerHTML = i.historico.map(h => `<div class="hist-item"><b>${h.data}</b>: ${h.detalhe}</div>`).reverse().join(''); }
+            navegar('screen-form-insumo');
+        }
+
+        function editarLanche(id) {
+            editingId = id; const l = lanches.find(x => x.id == id);
+            document.getElementById('ft-nome').value = l.nome; document.getElementById('ft-tipo').value = l.tipo || '';
+            document.getElementById('ft-status').value = l.status || 'ativo'; document.getElementById('ft-venda-manual').value = l.venda;
+            base64Image = l.imagem; document.getElementById('ft-img-preview').src = l.imagem || '';
+            ingredientesTemporarios = l.ingredientes || []; passosTemporarios = l.passos || [];
+            renderItensFicha(); renderPassos(); calcularCalculosCMV(); navegar('screen-ficha');
+        }
+
+        async function salvarMarca() { const n = document.getElementById('marca-novo-nome').value; if(n) { await db.collection('marcas').add({nome:n}); document.getElementById('marca-novo-nome').value=''; carregarDados(); } }
+        async function salvarFornecedor() { const n = document.getElementById('forn-novo-nome').value; if(n) { await db.collection('fornecedores').add({nome:n}); document.getElementById('forn-novo-nome').value=''; carregarDados(); } }
+        async function salvarCategoria() { const n = document.getElementById('cat-novo-nome').value; if(n) { await db.collection('categorias').add({nome:n}); document.getElementById('cat-novo-nome').value=''; carregarDados(); } }
+        async function excluirItem(col, id) { if(confirm("Excluir?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
+        
+        function popularSeletorMarcas() { document.getElementById('in-marca').innerHTML = marcas.map(m => `<option value="${m.nome}">${m.nome}</option>`).join(''); }
+        function popularSeletorFornecedores() { document.getElementById('in-fornecedor').innerHTML = fornecedores.map(f => `<option value="${f.nome}">${f.nome}</option>`).join(''); }
+        function popularSeletorCategorias() { document.getElementById('ft-tipo').innerHTML = categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join(''); }
+        function renderMarcas() { document.getElementById('list-marcas').innerHTML = marcas.map(m => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${m.nome}<button onclick="excluirItem('marcas','${m.id}')" style="color:red; background:none;">✕</button></div>`).join(''); }
+        function renderFornecedores() { document.getElementById('list-fornecedores').innerHTML = fornecedores.map(f => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${f.nome}<button onclick="excluirItem('fornecedores','${f.id}')" style="color:red; background:none;">✕</button></div>`).join(''); }
+        function renderCategorias() { document.getElementById('list-categorias').innerHTML = categorias.map(c => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${c.nome}<button onclick="excluirItem('categorias','${c.id}')" style="color:red; background:none;">✕</button></div>`).join(''); }
         function previewImage(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { base64Image = e.target.result; document.getElementById('ft-img-preview').src = base64Image; }; r.readAsDataURL(i.files[0]); } }
         function addPassoFicha() { const v = document.getElementById('ft-passo-input').value; if(v) { passosTemporarios.push(v); document.getElementById('ft-passo-input').value = ''; renderPassos(); } }
         function renderPassos() { document.getElementById('ft-lista-passos').innerHTML = passosTemporarios.map((p, i) => `<div style="font-size:12px; background:#f1f5f9; margin-bottom:4px; padding:4px;">${i+1}. ${p}</div>`).join(''); }
+        function renderItensFicha() { document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map((i, idx) => `<div style="font-size:12px; border-bottom:1px solid #eee; padding:5px; display:flex; justify-content:space-between">${i.qtd}${i.un} ${i.nome} - R$ ${i.custo.toFixed(2)}<button onclick="ingredientesTemporarios.splice(${idx},1);renderItensFicha();calcularCalculosCMV()">✕</button></div>`).join(''); }
+        
         function calcularCalculosCMV() {
-            const v = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
-            const c = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
+            const v = parseFloat(document.getElementById('ft-venda-manual').value) || 0, c = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
             document.getElementById('res-35').innerText = `R$ ${(c / 0.35).toFixed(2)}`;
             document.getElementById('res-30').innerText = `R$ ${(c / 0.30).toFixed(2)}`;
             if(v > 0) {
@@ -478,11 +395,9 @@
                 document.getElementById('res-cmv-real-box').style.color = 'white';
             }
         }
-        function atualizarDashboard() {
-            document.getElementById('count-insumos').innerText = insumos.length;
-            document.getElementById('count-lanches').innerText = lanches.length;
-        }
+        function abrirFormInsumo() { editingInsumoId = null; document.getElementById('in-titulo-form').innerText = "Novo Insumo"; document.getElementById('in-nome').value = ''; document.getElementById('in-preco').value = ''; document.getElementById('in-container-historico').classList.add('hidden'); navegar('screen-form-insumo'); }
         function abrirNovaFicha() { editingId = null; ingredientesTemporarios = []; passosTemporarios = []; base64Image = ""; document.getElementById('ft-nome').value = ''; document.getElementById('ft-img-preview').src = ''; renderItensFicha(); renderPassos(); navegar('screen-ficha'); }
+        function atualizarDashboard() { document.getElementById('count-insumos').innerText = insumos.length; document.getElementById('count-lanches').innerText = lanches.length; }
 
         carregarDados();
     </script>
