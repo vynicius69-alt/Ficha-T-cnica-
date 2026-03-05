@@ -3,245 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - Gestão Elite v6.3</title>
+    <title>Chef GG Pro - v6.9 Financeiro</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --warning: #f59e0b;
-            --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff;
-            --text-main: #334155; --text-muted: #64748b;
-        }
-
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff; --text-muted: #64748b; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--light); color: var(--text-main); line-height: 1.6; }
-
-        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 80px; }
+        body { font-family: 'Inter', sans-serif; background: var(--light); color: #334155; line-height: 1.6; }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 110px; }
         .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
         .content { padding: 15px; }
         .hidden { display: none !important; }
-
         .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; background: white; font-family: inherit; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; font-family: inherit; }
         
-        button { cursor: pointer; border: none; font-family: 'Inter', sans-serif; font-weight: 600; transition: 0.2s; }
-        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; margin-top: 10px; }
-        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-main); }
-        .btn-small { padding: 12px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        button { cursor: pointer; border: none; font-weight: 600; transition: 0.2s; font-family: inherit; }
+        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-duplicate { width: 100%; background: #6366f1; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
+        .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-muted); width: 100%; margin-top: 10px; }
+        .btn-small { padding: 10px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         
+        .cmv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .cmv-item { text-align: center; padding: 5px; border-radius: 4px; }
+        .cmv-item b { display: block; font-size: 15px; color: var(--dark); }
+        .cmv-item small { font-size: 9px; color: var(--text-muted); font-weight: bold; }
+        .destaque-cmv { background: #dbeafe; grid-column: span 2; }
+
         .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { text-align: center; background: none; color: var(--text-muted); font-size: 10px; flex: 1; border: none; }
-        .nav-item.active { color: var(--primary); }
+        .nav-item { background: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; font-size: 10px; }
+        .nav-item img { width: 24px; height: 24px; opacity: 0.6; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary); font-weight: 700; }
+        .nav-item.active img { opacity: 1; filter: invert(27%) sepia(91%) saturate(2352%) hue-rotate(212%) brightness(95%) contrast(92%); }
 
-        .cmv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .cmv-box { background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; border: 1px solid var(--border); }
+        .list-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; margin-right: 12px; background: #eee; }
+        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; border: 1px dashed #ccc; }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
 
-        .hist-item { font-size: 10px; padding: 5px; border-bottom: 1px solid #eee; color: var(--text-muted); }
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
-        .list-img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; margin-right: 12px; border: 1px solid var(--border); }
-        .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; border: 1px solid var(--border); }
+        .hist-item { font-size: 11px; padding: 6px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 2px; }
+        .hist-tag { font-size: 9px; padding: 2px 5px; border-radius: 4px; background: #e2e8f0; color: #475569; align-self: flex-start; margin-top: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><strong>Sincronizando...</strong><p>Aguarde um momento</p></div>
+    <div id="loading-overlay"><strong>Sincronizando Dados...</strong></div>
 
     <div class="app-container">
-        <div class="header"><h2>Chef GG Pro Cloud</h2></div>
+        <div class="header"><h2>Chef GG Pro</h2></div>
 
         <div class="content">
             <div id="screen-home" class="screen">
-                <div class="card"><h3>Dashboard</h3><p>Controle de Insumos e Produção.</p></div>
+                <div class="card"><h3>Painel Geral</h3><p>Gestão de Lucratividade</p></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="card" style="text-align: center;"><small>Insumos</small><h2 id="count-insumos">0</h2></div>
-                    <div class="card" style="text-align: center;"><small>Receitas</small><h2 id="count-lanches">0</h2></div>
+                    <div class="card" style="text-align: center;"><small>Fichas</small><h2 id="count-lanches">0</h2></div>
                 </div>
+            </div>
+
+            <div id="screen-insumos" class="screen hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                    <h3>Estoque de Insumos</h3>
+                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirFormInsumo()">+ Novo</button>
+                </div>
+                <input type="text" id="in-search-text" placeholder="🔍 Buscar insumo..." oninput="filtrarInsumos()" style="background:#f1f5f9; border:none">
+                <div id="list-insumos"></div>
+            </div>
+
+            <div id="screen-form-insumo" class="screen hidden">
+                <h3>Dados do Insumo</h3>
+                <div class="card">
+                    <label>Nome</label><input type="text" id="in-nome">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><label>Preço</label><input type="number" id="in-preco" step="0.01"></div>
+                        <div><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
+                    </div>
+                    <label>Categoria</label>
+                    <div style="display: flex; gap: 5px; margin-bottom: 12px;"><select id="in-classificacao"></select><button onclick="navegar('screen-classificacoes')" class="btn-small">+</button></div>
+                    <label>Marca</label>
+                    <div style="display: flex; gap: 5px; margin-bottom: 12px;"><select id="in-marca"></select><button onclick="navegar('screen-marcas')" class="btn-small">+</button></div>
+                    <label>Fornecedor</label>
+                    <div style="display: flex; gap: 5px;"><select id="in-fornecedor"></select><button onclick="navegar('screen-fornecedores')" class="btn-small">+</button></div>
+                </div>
+
+                <div class="card" id="card-hist-insumo">
+                    <label>📊 Histórico de Preços</label>
+                    <div id="in-lista-historico" style="max-height: 120px; overflow-y: auto; background: #fafafa; border-radius: 8px; padding: 5px;"></div>
+                </div>
+
+                <button class="btn-primary" onclick="salvarInsumo()">SALVAR INSUMO</button>
+                <button id="btn-duplicar-insumo" class="btn-duplicate hidden" onclick="duplicarInsumo()">👯 DUPLICAR ITEM</button>
+                <button class="btn-outline" onclick="navegar('screen-insumos')">VOLTAR</button>
             </div>
 
             <div id="screen-lanches" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
                     <h3>Fichas Técnicas</h3>
-                    <button class="btn-outline" onclick="abrirNovaFicha()">+ Criar</button>
+                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirNovaFicha()">+ Criar</button>
                 </div>
                 <div id="list-lanches"></div>
             </div>
 
             <div id="screen-ficha" class="screen hidden">
-                <h3>Ficha Técnica</h3>
-                <div class="card"><label>Imagem</label><img id="ft-img-preview" class="img-preview"><input type="file" accept="image/*" onchange="previewImage(this)"></div>
-                
+                <h3>Edição de Receita</h3>
                 <div class="card">
+                    <img id="ft-img-preview" src="sem foto.png" class="img-preview">
+                    <input type="file" accept="image/*" onchange="previewImage(this)">
                     <label>Nome da Receita</label><input type="text" id="ft-nome">
-                    <label>Categoria da Receita</label>
-                    <div style="display: flex; gap: 5px;">
-                        <select id="ft-tipo"></select>
-                        <button onclick="navegar('screen-categorias')" class="btn-small" style="background:var(--primary)">+</button>
-                    </div>
+                    <label>Preço de Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCMV()">
+                </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1"><label>Situação</label><select id="ft-status"><option value="ativo">Ativo</option><option value="teste">Teste</option></select></div>
-                        <div style="flex:1"><label>Preço Venda</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCalculosCMV()"></div>
+                <div class="card" style="border: 2px solid var(--primary);">
+                    <label>📈 Análise Financeira</label>
+                    <div class="cmv-grid">
+                        <div class="cmv-item destaque-cmv"><small>CMV DO PRATO (%)</small><b id="res-cmv-perc" style="font-size: 20px;">0%</b></div>
+                        <div class="cmv-item"><small>CUSTO TOTAL</small><b id="res-custo">R$ 0,00</b></div>
+                        <div class="cmv-item"><small>MARGEM CONTRIB.</small><b id="res-margem">0%</b></div>
+                        <div class="cmv-item"><small>LUCRO BRUTO</small><b id="res-lucro">R$ 0,00</b></div>
+                        <div class="cmv-item"><small>SUGESTÃO (35%)</small><b id="res-sugerido" style="color:var(--success)">R$ 0,00</b></div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <label>Ingredientes / Sub-receitas</label>
+                    <label>Ingredientes / Insumos</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                        <select id="ft-select-insumo" style="flex:3; margin-bottom:0; font-size: 11px;"></select>
-                        <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin-bottom:0;">
-                        <button onclick="addIngredienteFicha()" class="btn-small" style="background:var(--success)">+</button>
+                        <select id="ft-select-insumo" style="flex:3; margin:0"></select>
+                        <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin:0">
+                        <button onclick="addItemFicha()" class="btn-small" style="background:var(--success)">+</button>
                     </div>
                     <div id="ft-lista-itens"></div>
                 </div>
 
-                <div class="cmv-grid">
-                    <div class="cmv-box"><small>35%</small><br><b id="res-35">R$ 0,00</b></div>
-                    <div class="cmv-box"><small>30%</small><br><b id="res-30">R$ 0,00</b></div>
-                    <div class="cmv-box" id="res-cmv-real-box"><small>CMV Real</small><br><b id="res-cmv-real">0%</b></div>
-                </div>
-
-                <button class="btn-primary" onclick="salvarLanche()">💾 SALVAR FICHA</button>
-                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-lanches')">Descartar</button>
-            </div>
-
-            <div id="screen-insumos" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Estoque</h3><button class="btn-outline" onclick="abrirFormInsumo()">+ Novo</button></div>
-                <div id="list-insumos"></div>
-            </div>
-
-            <div id="screen-form-insumo" class="screen hidden">
-                <h3 id="in-titulo-form">Novo Insumo</h3>
                 <div class="card">
-                    <label>Nome do Insumo</label><input type="text" id="in-nome">
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div><label>Preço</label><input type="number" id="in-preco" step="0.01"></div>
-                        <div><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
+                    <label>Modo de Preparo</label>
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <input type="text" id="ft-passo-input" placeholder="Próximo passo..." style="margin:0">
+                        <button onclick="addPasso()" class="btn-small" style="background:var(--primary)">+</button>
                     </div>
-
-                    <label>Classificação (ex: Proteínas)</label>
-                    <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-                        <select id="in-classificacao" style="margin-bottom:0;"></select>
-                        <button onclick="navegar('screen-classificacoes')" class="btn-small" style="background:var(--primary)">+</button>
-                    </div>
-
-                    <label>Marca</label>
-                    <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-                        <select id="in-marca" style="margin-bottom:0;"></select>
-                        <button onclick="navegar('screen-marcas')" class="btn-small" style="background:var(--primary)">+</button>
-                    </div>
-
-                    <label>Fornecedor</label>
-                    <div style="display: flex; gap: 5px;">
-                        <select id="in-fornecedor" style="margin-bottom:0;"></select>
-                        <button onclick="navegar('screen-fornecedores')" class="btn-small" style="background:var(--primary)">+</button>
-                    </div>
+                    <div id="ft-lista-passos"></div>
                 </div>
-                <button class="btn-primary" onclick="salvarInsumo()">SALVAR INSUMO</button>
-                <button class="btn-outline" style="width:100%; margin-top:10px" onclick="navegar('screen-insumos')">Cancelar</button>
-            </div>
 
+                <button class="btn-primary" onclick="salvarLanche()">SALVAR FICHA</button>
+                <button class="btn-outline" onclick="navegar('screen-lanches')">CANCELAR</button>
+            </div>
+            
             <div id="screen-classificacoes" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Classificações</h3><button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button></div>
-                <div class="card"><label>Nova Classificação</label><div style="display: flex; gap: 5px;"><input type="text" id="class-novo-nome" style="margin-bottom:0;"><button onclick="salvarClassificacao()" class="btn-small" style="background:var(--success)">+</button></div></div>
+                <h3>Categorias</h3>
+                <div class="card"><input type="text" id="class-novo-nome"><button onclick="salvarApoio('classificacoes','class-novo-nome')" class="btn-primary">Adicionar</button></div>
                 <div id="list-classificacoes"></div>
+                <button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button>
             </div>
-
-            <div id="screen-marcas" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Marcas</h3><button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button></div>
-                <div class="card"><label>Nova Marca</label><div style="display: flex; gap: 5px;"><input type="text" id="marca-novo-nome" style="margin-bottom:0;"><button onclick="salvarMarca()" class="btn-small" style="background:var(--success)">+</button></div></div>
-                <div id="list-marcas"></div>
-            </div>
-
             <div id="screen-fornecedores" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Fornecedores</h3><button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button></div>
-                <div class="card"><label>Novo Fornecedor</label><div style="display: flex; gap: 5px;"><input type="text" id="forn-novo-nome" style="margin-bottom:0;"><button onclick="salvarFornecedor()" class="btn-small" style="background:var(--success)">+</button></div></div>
+                <h3>Fornecedores</h3>
+                <div class="card"><input type="text" id="forn-novo-nome"><button onclick="salvarApoio('fornecedores','forn-novo-nome')" class="btn-primary">Adicionar</button></div>
                 <div id="list-fornecedores"></div>
+                <button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button>
             </div>
-
-            <div id="screen-categorias" class="screen hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px"><h3>Categorias</h3><button class="btn-outline" onclick="navegar('screen-ficha')">Voltar</button></div>
-                <div class="card"><label>Nova Categoria</label><div style="display: flex; gap: 5px;"><input type="text" id="cat-novo-nome" style="margin-bottom:0;"><button onclick="salvarCategoria()" class="btn-small" style="background:var(--success)">+</button></div></div>
-                <div id="list-categorias"></div>
+            <div id="screen-marcas" class="screen hidden">
+                <h3>Marcas</h3>
+                <div class="card"><input type="text" id="marca-novo-nome"><button onclick="salvarApoio('marcas','marca-novo-nome')" class="btn-primary">Adicionar</button></div>
+                <div id="list-marcas"></div>
+                <button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button>
             </div>
-
         </div>
 
-        <div class="nav-bar">
-            <button class="nav-item active" id="nav-home" onclick="navegar('screen-home')">🏠<br>Home</button>
-            <button class="nav-item" id="nav-insumos" onclick="navegar('screen-insumos')">📦<br>Insumos</button>
-            <button class="nav-item" id="nav-lanches" onclick="navegar('screen-lanches')">🍔<br>Fichas</button>
-        </div>
+        <nav class="nav-bar">
+            <button class="nav-item active" id="nav-home" onclick="navegar('screen-home')">Home</button>
+            <button class="nav-item" id="nav-insumos" onclick="navegar('screen-insumos')">Estoque</button>
+            <button class="nav-item" id="nav-lanches" onclick="navegar('screen-lanches')">Receitas</button>
+        </nav>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk",
-            authDomain: "chef-gg-pro.firebaseapp.com",
-            projectId: "chef-gg-pro",
-            storageBucket: "chef-gg-pro.firebasestorage.app",
-            messagingSenderId: "183718681004",
-            appId: "1:183718681004:web:bdd4749c8b4c904cd6c209"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk", authDomain: "chef-gg-pro.firebaseapp.com", projectId: "chef-gg-pro", storageBucket: "chef-gg-pro.firebasestorage.app", messagingSenderId: "183718681004", appId: "1:183718681004:web:bdd4749c8b4c904cd6c209" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let insumos = [], lanches = [], categorias = [], fornecedores = [], marcas = [], classificacoes = [];
-        let editingId = null, editingInsumoId = null, ingredientesTemporarios = [], base64Image = "";
+        let insumos = [], lanches = [], marcas = [], classificacoes = [], fornecedores = [];
+        let editingId = null, editingInsumoId = null, itensFicha = [], passosFicha = [], base64Img = "";
 
         async function carregarDados() {
             document.getElementById('loading-overlay').style.display = 'flex';
             try {
-                const [insS, lanS, catS, forS, marS, claS] = await Promise.all([
+                const [insS, lanS, marS, claS, forS] = await Promise.all([
                     db.collection('insumos').get(), db.collection('receitas').get(),
-                    db.collection('categorias').get(), db.collection('fornecedores').get(),
-                    db.collection('marcas').get(), db.collection('classificacoes').get()
+                    db.collection('marcas').get(), db.collection('classificacoes').get(), db.collection('fornecedores').get()
                 ]);
-                insumos = insS.docs.map(d => ({ id: d.id, ...d.data() }));
-                lanches = lanS.docs.map(d => ({ id: d.id, ...d.data() }));
-                categorias = catS.docs.map(d => ({ id: d.id, ...d.data() }));
-                fornecedores = forS.docs.map(d => ({ id: d.id, ...d.data() }));
-                marcas = marS.docs.map(d => ({ id: d.id, ...d.data() }));
-                classificacoes = claS.docs.map(d => ({ id: d.id, ...d.data() }));
-                
+                insumos = insS.docs.map(d => ({id: d.id, ...d.data()}));
+                lanches = lanS.docs.map(d => ({id: d.id, ...d.data()}));
+                marcas = marS.docs.map(d => ({id: d.id, ...d.data()}));
+                classificacoes = claS.docs.map(d => ({id: d.id, ...d.data()}));
+                fornecedores = forS.docs.map(d => ({id: d.id, ...d.data()}));
                 renderTudo();
-                document.getElementById('count-insumos').innerText = insumos.length;
-                document.getElementById('count-lanches').innerText = lanches.length;
             } catch (e) { console.error(e); }
             document.getElementById('loading-overlay').style.display = 'none';
         }
 
         function renderTudo() {
-            renderInsumos(); renderLanches(); 
-            renderGenericList('list-classificacoes', classificacoes, 'classificacoes');
-            renderGenericList('list-marcas', marcas, 'marcas');
-            renderGenericList('list-fornecedores', fornecedores, 'fornecedores');
-            renderGenericList('list-categorias', categorias, 'categorias');
-            
+            filtrarInsumos();
+            renderLanches();
+            renderListaApoio('list-classificacoes', classificacoes, 'classificacoes');
+            renderListaApoio('list-marcas', marcas, 'marcas');
+            renderListaApoio('list-fornecedores', fornecedores, 'fornecedores');
             popularSelect('in-classificacao', classificacoes);
             popularSelect('in-marca', marcas);
             popularSelect('in-fornecedor', fornecedores);
-            popularSelect('ft-tipo', categorias);
-            popularSeletorCombo();
+            popularSeletorComboFicha();
+            document.getElementById('count-insumos').innerText = insumos.length;
+            document.getElementById('count-lanches').innerText = lanches.length;
         }
 
-        function popularSelect(id, lista) {
-            document.getElementById(id).innerHTML = lista.map(item => `<option value="${item.nome}">${item.nome}</option>`).join('');
+        function navegar(id) { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
+            document.getElementById(id).classList.remove('hidden'); 
         }
 
-        function popularSeletorCombo() {
-            let h = '<option value="">Selecione...</option><optgroup label="📦 INSUMOS">';
-            insumos.forEach(i => h += `<option value="INS_${i.id}">${i.nome} (${i.marca}) - R$ ${i.valor.toFixed(2)}</option>`);
-            h += '</optgroup><optgroup label="👨‍🍳 SUB-RECEITAS">';
-            lanches.forEach(l => h += `<option value="REC_${l.id}">[PRODUÇÃO] ${l.nome} - R$ ${l.custo.toFixed(2)}</option>`);
-            document.getElementById('ft-select-insumo').innerHTML = h + '</optgroup>';
+        // --- LÓGICA INSUMOS ---
+        function abrirFormInsumo() {
+            editingInsumoId = null;
+            document.getElementById('in-nome').value = "";
+            document.getElementById('in-preco').value = "";
+            document.getElementById('in-lista-historico').innerHTML = "";
+            navegar('screen-form-insumo');
+        }
+
+        function abrirEditarInsumo(id) {
+            editingInsumoId = id;
+            const i = insumos.find(x => x.id === id);
+            document.getElementById('in-nome').value = i.nome;
+            document.getElementById('in-preco').value = i.valor;
+            document.getElementById('in-un').value = i.unidade || "kg";
+            document.getElementById('in-classificacao').value = i.classificacao || "";
+            document.getElementById('in-marca').value = i.marca || "";
+            document.getElementById('in-fornecedor').value = i.fornecedor || "";
+            renderHistoricoInsumo(i.historico || []);
+            navegar('screen-form-insumo');
         }
 
         async function salvarInsumo() {
-            const iObj = {
+            const obj = {
                 nome: document.getElementById('in-nome').value,
                 valor: parseFloat(document.getElementById('in-preco').value),
                 unidade: document.getElementById('in-un').value,
@@ -249,102 +249,158 @@
                 marca: document.getElementById('in-marca').value,
                 fornecedor: document.getElementById('in-fornecedor').value
             };
-            if(!iObj.nome || isNaN(iObj.valor)) return alert("Preencha os campos!");
-            if(editingInsumoId) await db.collection('insumos').doc(editingInsumoId).update(iObj);
-            else await db.collection('insumos').add(iObj);
-            carregarDados(); navegar('screen-insumos');
+
+            if (editingInsumoId) {
+                await db.collection('insumos').doc(editingInsumoId).update(obj);
+            } else {
+                await db.collection('insumos').add(obj);
+            }
+            await carregarDados();
+            navegar('screen-insumos');
         }
 
-        async function salvarClassificacao() {
-            const n = document.getElementById('class-novo-nome').value;
-            if(n) { await db.collection('classificacoes').add({nome: n}); document.getElementById('class-novo-nome').value=''; carregarDados(); }
+        // --- LÓGICA FICHAS ---
+        function abrirNovaFicha() {
+            editingId = null;
+            itensFicha = []; passosFicha = []; base64Img = "";
+            document.getElementById('ft-nome').value = "";
+            document.getElementById('ft-venda-manual').value = "";
+            document.getElementById('ft-img-preview').src = "sem foto.png";
+            renderItensFicha(); renderPassos(); calcularCMV();
+            navegar('screen-ficha');
         }
 
-        // Funções Genéricas e de Apoio
-        function renderGenericList(divId, data, col) {
-            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red; background:none;">✕</button></div>`).join('');
-        }
-        async function excluirItem(col, id) { if(confirm("Excluir?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
-        async function salvarMarca() { const n = document.getElementById('marca-novo-nome').value; if(n) { await db.collection('marcas').add({nome:n}); document.getElementById('marca-novo-nome').value=''; carregarDados(); } }
-        async function salvarFornecedor() { const n = document.getElementById('forn-novo-nome').value; if(n) { await db.collection('fornecedores').add({nome:n}); document.getElementById('forn-novo-nome').value=''; carregarDados(); } }
-        async function salvarCategoria() { const n = document.getElementById('cat-novo-nome').value; if(n) { await db.collection('categorias').add({nome:n}); document.getElementById('cat-novo-nome').value=''; carregarDados(); } }
-
-        function renderInsumos() {
-            document.getElementById('list-insumos').innerHTML = insumos.map(i => `
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><b>${i.nome}</b><br><small>${i.classificacao || 'S/C'} | ${i.marca || 'S/M'}<br>R$ ${i.valor.toFixed(2)}/${i.unidade}</small></div>
-                    <button onclick="abrirEditarInsumo('${i.id}')">📝</button>
-                </div>
-            `).join('');
-        }
-
-        function abrirEditarInsumo(id) {
-            editingInsumoId = id; const i = insumos.find(x => x.id == id);
-            document.getElementById('in-titulo-form').innerText = "Editar Insumo";
-            document.getElementById('in-nome').value = i.nome; document.getElementById('in-preco').value = i.valor;
-            document.getElementById('in-un').value = i.unidade; document.getElementById('in-classificacao').value = i.classificacao || '';
-            document.getElementById('in-marca').value = i.marca || ''; document.getElementById('in-fornecedor').value = i.fornecedor || '';
-            navegar('screen-form-insumo');
-        }
-
-        function abrirFormInsumo() { editingInsumoId = null; document.getElementById('in-titulo-form').innerText = "Novo Insumo"; document.getElementById('in-nome').value = ''; document.getElementById('in-preco').value = ''; navegar('screen-form-insumo'); }
-
-        // Mantendo Navegação e Ficha Técnica
-        function navegar(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-        function previewImage(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { base64Image = e.target.result; document.getElementById('ft-img-preview').src = base64Image; }; r.readAsDataURL(i.files[0]); } }
-        function abrirNovaFicha() { editingId = null; ingredientesTemporarios = []; document.getElementById('ft-nome').value = ''; document.getElementById('ft-img-preview').src = ''; renderItensFicha(); navegar('screen-ficha'); }
-        
-        function addIngredienteFicha() {
-            const val = document.getElementById('ft-select-insumo').value, qtd = parseFloat(document.getElementById('ft-qtd').value);
-            if(!val || !qtd) return;
-            const [tipo, id] = val.split('_');
-            const item = tipo === 'INS' ? insumos.find(x => x.id === id) : lanches.find(x => x.id === id);
-            ingredientesTemporarios.push({ 
-                nome: tipo === 'INS' ? `${item.nome} (${item.marca})` : `[REC] ${item.nome}`, 
-                qtd, un: tipo === 'INS' ? item.unidade : 'un', custo: (tipo === 'INS' ? item.valor : item.custo) * qtd 
-            });
-            renderItensFicha(); calcularCalculosCMV();
-        }
-
-        function renderItensFicha() {
-            document.getElementById('ft-lista-itens').innerHTML = ingredientesTemporarios.map((i, idx) => `<div style="font-size:12px; border-bottom:1px solid #eee; padding:5px; display:flex; justify-content:space-between">${i.qtd}${i.un} ${i.nome} - R$ ${i.custo.toFixed(2)}<button onclick="ingredientesTemporarios.splice(${idx},1);renderItensFicha();calcularCalculosCMV()">✕</button></div>`).join('');
-        }
-
-        function calcularCalculosCMV() {
-            const v = parseFloat(document.getElementById('ft-venda-manual').value) || 0, c = ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0);
-            document.getElementById('res-35').innerText = `R$ ${(c / 0.35).toFixed(2)}`;
-            document.getElementById('res-30').innerText = `R$ ${(c / 0.30).toFixed(2)}`;
-            if(v > 0) document.getElementById('res-cmv-real').innerText = `${((c / v) * 100).toFixed(1)}%`;
+        function editarLanche(id) {
+            editingId = id;
+            const l = lanches.find(x => x.id === id);
+            document.getElementById('ft-nome').value = l.nome;
+            document.getElementById('ft-venda-manual').value = l.preco_venda || 0;
+            base64Img = l.imagem || "";
+            document.getElementById('ft-img-preview').src = l.imagem || "sem foto.png";
+            itensFicha = [...(l.ingredientes || [])];
+            passosFicha = [...(l.passos || [])];
+            renderItensFicha(); renderPassos(); calcularCMV();
+            navegar('screen-ficha');
         }
 
         async function salvarLanche() {
-            const lObj = {
-                nome: document.getElementById('ft-nome').value, tipo: document.getElementById('ft-tipo').value,
-                venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
-                custo: ingredientesTemporarios.reduce((acc, curr) => acc + curr.custo, 0),
-                ingredientes: ingredientesTemporarios, imagem: base64Image
+            const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+            const obj = {
+                nome: document.getElementById('ft-nome').value,
+                custo: custoTotal,
+                preco_venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
+                ingredientes: itensFicha,
+                passos: passosFicha,
+                imagem: base64Img
             };
-            if(editingId) await db.collection('receitas').doc(editingId).update(lObj);
-            else await db.collection('receitas').add(lObj);
-            carregarDados(); navegar('screen-lanches');
+
+            if (editingId) {
+                await db.collection('receitas').doc(editingId).update(obj);
+            } else {
+                await db.collection('receitas').add(obj);
+            }
+            await carregarDados();
+            navegar('screen-lanches');
+        }
+
+        // --- AUXILIARES ---
+        function calcularCMV() {
+            const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+            const precoVenda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
+            const cmvReal = precoVenda > 0 ? (custoTotal / precoVenda) * 100 : 0;
+            const margem = precoVenda > 0 ? ((precoVenda - custoTotal) / precoVenda) * 100 : 0;
+            const lucro = precoVenda - custoTotal;
+            const sugerido = custoTotal / 0.35;
+
+            document.getElementById('res-cmv-perc').innerText = `${cmvReal.toFixed(1)}%`;
+            document.getElementById('res-custo').innerText = `R$ ${custoTotal.toFixed(2)}`;
+            document.getElementById('res-margem').innerText = `${margem.toFixed(1)}%`;
+            document.getElementById('res-lucro').innerText = `R$ ${lucro.toFixed(2)}`;
+            document.getElementById('res-sugerido').innerText = `R$ ${sugerido.toFixed(2)}`;
+            document.getElementById('res-cmv-perc').style.color = cmvReal > 35 ? 'var(--danger)' : 'var(--success)';
+        }
+
+        function filtrarInsumos() {
+            const txt = document.getElementById('in-search-text').value.toLowerCase();
+            const filtrados = insumos.filter(i => i.nome.toLowerCase().includes(txt));
+            document.getElementById('list-insumos').innerHTML = filtrados.map(i => `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+                    <div><b>${i.nome}</b><br><small>R$ ${i.valor.toFixed(2)} / ${i.unidade}</small></div>
+                    <button class="btn-small" onclick="abrirEditarInsumo('${i.id}')">✏️</button>
+                </div>
+            `).join('');
         }
 
         function renderLanches() {
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
                 <div class="card" style="display:flex; align-items:center;">
-                    <img src="${l.imagem || ''}" class="list-img">
-                    <div style="flex:1"><strong>${l.nome}</strong><br><small>Custo: R$ ${l.custo.toFixed(2)}</small></div>
-                    <button onclick="editarLanche('${l.id}')">📝</button>
+                    <img src="${l.imagem || 'sem foto.png'}" class="list-img">
+                    <div style="flex:1"><b>${l.nome}</b><br><small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small></div>
+                    <button class="btn-small" onclick="editarLanche('${l.id}')">✏️</button>
                 </div>
             `).join('');
         }
 
-        function editarLanche(id) {
-            editingId = id; const l = lanches.find(x => x.id == id);
-            document.getElementById('ft-nome').value = l.nome; document.getElementById('ft-venda-manual').value = l.venda;
-            base64Image = l.imagem; document.getElementById('ft-img-preview').src = l.imagem || '';
-            ingredientesTemporarios = l.ingredientes || [];
-            renderItensFicha(); calcularCalculosCMV(); navegar('screen-ficha');
+        function popularSeletorComboFicha() {
+            let h = '<option value="">Selecione...</option><optgroup label="📦 INSUMOS">';
+            insumos.forEach(i => h += `<option value="INS_${i.id}">${i.nome} - R$ ${i.valor.toFixed(2)}</option>`);
+            h += '</optgroup>';
+            document.getElementById('ft-select-insumo').innerHTML = h;
+        }
+
+        function addItemFicha() {
+            const val = document.getElementById('ft-select-insumo').value;
+            const qtd = parseFloat(document.getElementById('ft-qtd').value);
+            if(!val || !qtd) return;
+            const id = val.split('_')[1];
+            const item = insumos.find(x => x.id === id);
+            itensFicha.push({ nome: item.nome, qtd, custo: item.valor * qtd });
+            renderItensFicha(); calcularCMV();
+        }
+
+        function renderItensFicha() {
+            document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
+                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
+                    <span>${i.qtd}x ${i.nome}</span>
+                    <span>R$ ${i.custo.toFixed(2)} <button onclick="itensFicha.splice(${idx},1);renderItensFicha();calcularCMV()">✕</button></span>
+                </div>
+            `).join('');
+        }
+
+        function addPasso() {
+            const txt = document.getElementById('ft-passo-input').value;
+            if(txt) { passosFicha.push(txt); document.getElementById('ft-passo-input').value = ''; renderPassos(); }
+        }
+
+        function renderPassos() {
+            document.getElementById('ft-lista-passos').innerHTML = passosFicha.map((p, i) => `
+                <div style="padding:5px; border-bottom:1px solid #eee">${i+1}. ${p} <button onclick="passosFicha.splice(${i},1);renderPassos()">✕</button></div>
+            `).join('');
+        }
+
+        function popularSelect(id, lista) {
+            const el = document.getElementById(id);
+            if(el) el.innerHTML = '<option value="">Selecione...</option>' + lista.map(item => `<option value="${item.nome}">${item.nome}</option>`).join('');
+        }
+
+        function renderListaApoio(divId, data, col) {
+            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red">✕</button></div>`).join('');
+        }
+
+        async function excluirItem(col, id) { if(confirm("Excluir?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
+        async function salvarApoio(col, inputId) { const nome = document.getElementById(inputId).value; if(nome) { await db.collection(col).add({nome}); document.getElementById(inputId).value=''; carregarDados(); } }
+        
+        function previewImage(i) {
+            if(i.files[0]) {
+                const r = new FileReader();
+                r.onload = e => { base64Img = e.target.result; document.getElementById('ft-img-preview').src = base64Img; };
+                r.readAsDataURL(i.files[0]);
+            }
+        }
+
+        function renderHistoricoInsumo(hist) {
+            const container = document.getElementById('in-lista-historico');
+            container.innerHTML = hist.map(h => `<div class="hist-item"><b>${h.data}</b> - R$ ${h.valor.toFixed(2)}</div>`).join('');
         }
 
         carregarDados();
