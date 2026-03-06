@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - v6.9 Financeiro</title>
+    <title>Chef GG Pro - v7.0 Performance</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,6 +18,7 @@
         .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 14px; outline: none; font-family: inherit; }
+        textarea { resize: vertical; min-height: 80px; }
         
         button { cursor: pointer; border: none; font-weight: 600; transition: 0.2s; font-family: inherit; }
         .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -32,17 +33,15 @@
         .destaque-cmv { background: #dbeafe; grid-column: span 2; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { background: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; font-size: 10px; }
-        .nav-item img { width: 24px; height: 24px; opacity: 0.6; margin-bottom: 4px; }
+        .nav-item { background: none; color: var(--text-muted); border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
-        .nav-item.active img { opacity: 1; filter: invert(27%) sepia(91%) saturate(2352%) hue-rotate(212%) brightness(95%) contrast(92%); }
 
         .list-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; margin-right: 12px; background: #eee; }
         .img-preview { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #eee; margin-bottom: 15px; border: 1px dashed #ccc; }
         #loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
 
-        .hist-item { font-size: 11px; padding: 6px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 2px; }
-        .hist-tag { font-size: 9px; padding: 2px 5px; border-radius: 4px; background: #e2e8f0; color: #475569; align-self: flex-start; margin-top: 2px; }
+        .hist-item { font-size: 11px; padding: 8px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 4px; border-radius: 4px; }
+        .hist-date { color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -71,11 +70,11 @@
             </div>
 
             <div id="screen-form-insumo" class="screen hidden">
-                <h3>Dados do Insumo</h3>
+                <h3 id="titulo-form-insumo">Novo Insumo</h3>
                 <div class="card">
                     <label>Nome</label><input type="text" id="in-nome">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div><label>Preço</label><input type="number" id="in-preco" step="0.01"></div>
+                        <div><label>Preço Atual</label><input type="number" id="in-preco" step="0.01"></div>
                         <div><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
                     </div>
                     <label>Categoria</label>
@@ -84,15 +83,17 @@
                     <div style="display: flex; gap: 5px; margin-bottom: 12px;"><select id="in-marca"></select><button onclick="navegar('screen-marcas')" class="btn-small">+</button></div>
                     <label>Fornecedor</label>
                     <div style="display: flex; gap: 5px;"><select id="in-fornecedor"></select><button onclick="navegar('screen-fornecedores')" class="btn-small">+</button></div>
+                    
+                    <label style="margin-top:15px">Observações do Insumo</label>
+                    <textarea id="in-obs" placeholder="Ex: Local na prateleira, especificações técnicas..."></textarea>
                 </div>
 
                 <div class="card" id="card-hist-insumo">
-                    <label>📊 Histórico de Preços</label>
-                    <div id="in-lista-historico" style="max-height: 120px; overflow-y: auto; background: #fafafa; border-radius: 8px; padding: 5px;"></div>
+                    <label>📊 Histórico de Alterações</label>
+                    <div id="in-lista-historico" style="max-height: 150px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px; border: 1px solid var(--border);"></div>
                 </div>
 
                 <button class="btn-primary" onclick="salvarInsumo()">SALVAR INSUMO</button>
-                <button id="btn-duplicar-insumo" class="btn-duplicate hidden" onclick="duplicarInsumo()">👯 DUPLICAR ITEM</button>
                 <button class="btn-outline" onclick="navegar('screen-insumos')">VOLTAR</button>
             </div>
 
@@ -135,12 +136,20 @@
                 </div>
 
                 <div class="card">
-                    <label>Modo de Preparo</label>
+                    <label>Modo de Preparo / Observações</label>
+                    <textarea id="ft-obs" placeholder="Dicas de montagem, tempo de fogo, observações gerais..."></textarea>
+                    
+                    <label style="margin-top:10px">Passo a Passo</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <input type="text" id="ft-passo-input" placeholder="Próximo passo..." style="margin:0">
                         <button onclick="addPasso()" class="btn-small" style="background:var(--primary)">+</button>
                     </div>
                     <div id="ft-lista-passos"></div>
+                </div>
+
+                <div class="card" id="card-hist-ficha">
+                    <label>📊 Histórico de Custos</label>
+                    <div id="ft-lista-historico" style="max-height: 120px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px; border: 1px solid var(--border);"></div>
                 </div>
 
                 <button class="btn-primary" onclick="salvarLanche()">SALVAR FICHA</button>
@@ -175,6 +184,7 @@
     </div>
 
     <script>
+        // Configuração Firebase (Mantida)
         const firebaseConfig = { apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk", authDomain: "chef-gg-pro.firebaseapp.com", projectId: "chef-gg-pro", storageBucket: "chef-gg-pro.firebasestorage.app", messagingSenderId: "183718681004", appId: "1:183718681004:web:bdd4749c8b4c904cd6c209" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -216,43 +226,61 @@
         function navegar(id) { 
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
             document.getElementById(id).classList.remove('hidden'); 
+            window.scrollTo(0,0);
         }
 
         // --- LÓGICA INSUMOS ---
         function abrirFormInsumo() {
             editingInsumoId = null;
+            document.getElementById('titulo-form-insumo').innerText = "Novo Insumo";
             document.getElementById('in-nome').value = "";
             document.getElementById('in-preco').value = "";
-            document.getElementById('in-lista-historico').innerHTML = "";
+            document.getElementById('in-obs').value = "";
+            document.getElementById('in-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Insumo novo não possui histórico.</p>";
             navegar('screen-form-insumo');
         }
 
         function abrirEditarInsumo(id) {
             editingInsumoId = id;
             const i = insumos.find(x => x.id === id);
+            document.getElementById('titulo-form-insumo').innerText = "Editando: " + i.nome;
             document.getElementById('in-nome').value = i.nome;
             document.getElementById('in-preco').value = i.valor;
             document.getElementById('in-un').value = i.unidade || "kg";
             document.getElementById('in-classificacao').value = i.classificacao || "";
             document.getElementById('in-marca').value = i.marca || "";
             document.getElementById('in-fornecedor').value = i.fornecedor || "";
-            renderHistoricoInsumo(i.historico || []);
+            document.getElementById('in-obs').value = i.observacoes || "";
+            renderHistoricoGenerico('in-lista-historico', i.historico || []);
             navegar('screen-form-insumo');
         }
 
         async function salvarInsumo() {
+            const precoNovo = parseFloat(document.getElementById('in-preco').value);
+            const dataAtual = new Date().toLocaleString('pt-BR');
+            
             const obj = {
                 nome: document.getElementById('in-nome').value,
-                valor: parseFloat(document.getElementById('in-preco').value),
+                valor: precoNovo,
                 unidade: document.getElementById('in-un').value,
                 classificacao: document.getElementById('in-classificacao').value,
                 marca: document.getElementById('in-marca').value,
-                fornecedor: document.getElementById('in-fornecedor').value
+                fornecedor: document.getElementById('in-fornecedor').value,
+                observacoes: document.getElementById('in-obs').value
             };
 
             if (editingInsumoId) {
+                const iAntigo = insumos.find(x => x.id === editingInsumoId);
+                let hist = iAntigo.historico || [];
+                
+                // Se o preço mudou, gera histórico
+                if (iAntigo.valor !== precoNovo) {
+                    hist.unshift({ data: dataAtual, valor: precoNovo, info: "Alteração de Preço" });
+                }
+                obj.historico = hist.slice(0, 10); // Mantém as 10 últimas
                 await db.collection('insumos').doc(editingInsumoId).update(obj);
             } else {
+                obj.historico = [{ data: dataAtual, valor: precoNovo, info: "Cadastro Inicial" }];
                 await db.collection('insumos').add(obj);
             }
             await carregarDados();
@@ -265,7 +293,9 @@
             itensFicha = []; passosFicha = []; base64Img = "";
             document.getElementById('ft-nome').value = "";
             document.getElementById('ft-venda-manual').value = "";
+            document.getElementById('ft-obs').value = "";
             document.getElementById('ft-img-preview').src = "sem foto.png";
+            document.getElementById('ft-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Sem histórico.</p>";
             renderItensFicha(); renderPassos(); calcularCMV();
             navegar('screen-ficha');
         }
@@ -275,28 +305,40 @@
             const l = lanches.find(x => x.id === id);
             document.getElementById('ft-nome').value = l.nome;
             document.getElementById('ft-venda-manual').value = l.preco_venda || 0;
+            document.getElementById('ft-obs').value = l.observacoes || "";
             base64Img = l.imagem || "";
             document.getElementById('ft-img-preview').src = l.imagem || "sem foto.png";
             itensFicha = [...(l.ingredientes || [])];
             passosFicha = [...(l.passos || [])];
             renderItensFicha(); renderPassos(); calcularCMV();
+            renderHistoricoGenerico('ft-lista-historico', l.historico || []);
             navegar('screen-ficha');
         }
 
         async function salvarLanche() {
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+            const dataAtual = new Date().toLocaleString('pt-BR');
+            
             const obj = {
                 nome: document.getElementById('ft-nome').value,
                 custo: custoTotal,
                 preco_venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
                 ingredientes: itensFicha,
                 passos: passosFicha,
-                imagem: base64Img
+                imagem: base64Img,
+                observacoes: document.getElementById('ft-obs').value
             };
 
             if (editingId) {
+                const lAntigo = lanches.find(x => x.id === editingId);
+                let hist = lAntigo.historico || [];
+                if (Math.abs(lAntigo.custo - custoTotal) > 0.01) {
+                    hist.unshift({ data: dataAtual, valor: custoTotal, info: "Atualização de Custo" });
+                }
+                obj.historico = hist.slice(0, 10);
                 await db.collection('receitas').doc(editingId).update(obj);
             } else {
+                obj.historico = [{ data: dataAtual, valor: custoTotal, info: "Criação da Ficha" }];
                 await db.collection('receitas').add(obj);
             }
             await carregarDados();
@@ -304,6 +346,20 @@
         }
 
         // --- AUXILIARES ---
+        function renderHistoricoGenerico(containerId, hist) {
+            const container = document.getElementById(containerId);
+            if (!hist || hist.length === 0) {
+                container.innerHTML = "<small>Nenhum histórico registrado.</small>";
+                return;
+            }
+            container.innerHTML = hist.map(h => `
+                <div class="hist-item">
+                    <span class="hist-date">${h.data}</span>
+                    <b>R$ ${h.valor.toFixed(2)}</b> - <small>${h.info || 'Atualização'}</small>
+                </div>
+            `).join('');
+        }
+
         function calcularCMV() {
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const precoVenda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
@@ -362,7 +418,7 @@
             document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
                 <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
                     <span>${i.qtd}x ${i.nome}</span>
-                    <span>R$ ${i.custo.toFixed(2)} <button onclick="itensFicha.splice(${idx},1);renderItensFicha();calcularCMV()">✕</button></span>
+                    <span>R$ ${i.custo.toFixed(2)} <button onclick="itensFicha.splice(${idx},1);renderItensFicha();calcularCMV()" style="color:red; background:none; border:none; padding:0 5px">✕</button></span>
                 </div>
             `).join('');
         }
@@ -374,7 +430,10 @@
 
         function renderPassos() {
             document.getElementById('ft-lista-passos').innerHTML = passosFicha.map((p, i) => `
-                <div style="padding:5px; border-bottom:1px solid #eee">${i+1}. ${p} <button onclick="passosFicha.splice(${i},1);renderPassos()">✕</button></div>
+                <div style="padding:5px; border-bottom:1px solid #eee; display:flex; justify-content:space-between">
+                    <span>${i+1}. ${p}</span>
+                    <button onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none">✕</button>
+                </div>
             `).join('');
         }
 
@@ -384,10 +443,10 @@
         }
 
         function renderListaApoio(divId, data, col) {
-            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red">✕</button></div>`).join('');
+            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red; background:none; border:none">✕</button></div>`).join('');
         }
 
-        async function excluirItem(col, id) { if(confirm("Excluir?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
+        async function excluirItem(col, id) { if(confirm("Deseja realmente excluir este item?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
         async function salvarApoio(col, inputId) { const nome = document.getElementById(inputId).value; if(nome) { await db.collection(col).add({nome}); document.getElementById(inputId).value=''; carregarDados(); } }
         
         function previewImage(i) {
@@ -396,11 +455,6 @@
                 r.onload = e => { base64Img = e.target.result; document.getElementById('ft-img-preview').src = base64Img; };
                 r.readAsDataURL(i.files[0]);
             }
-        }
-
-        function renderHistoricoInsumo(hist) {
-            const container = document.getElementById('in-lista-historico');
-            container.innerHTML = hist.map(h => `<div class="hist-item"><b>${h.data}</b> - R$ ${h.valor.toFixed(2)}</div>`).join('');
         }
 
         carregarDados();
