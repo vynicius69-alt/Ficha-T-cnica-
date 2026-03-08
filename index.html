@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef GG Pro - v7.0 Performance</title>
+    <title>Chef GG Pro - v8.0 Lanches e Receitas</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff; --text-muted: #64748b; }
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #ef4444; --dark: #1e293b; --light: #f8fafc; --border: #e2e8f0; --surface: #ffffff; --text-muted: #64748b; --receita: #8b5cf6; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background: var(--light); color: #334155; line-height: 1.6; }
         .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); box-shadow: 0 0 20px rgba(0,0,0,0.05); position: relative; padding-bottom: 110px; }
@@ -22,7 +22,7 @@
         
         button { cursor: pointer; border: none; font-weight: 600; transition: 0.2s; font-family: inherit; }
         .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border-radius: 8px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-duplicate { width: 100%; background: #6366f1; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
+        .btn-receita { width: 100%; background: var(--receita); color: white; padding: 15px; border-radius: 8px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-outline { background: none; border: 1px solid var(--border); padding: 8px 15px; border-radius: 6px; font-size: 13px; color: var(--text-muted); width: 100%; margin-top: 10px; }
         .btn-small { padding: 10px; height: 46px; background: var(--dark); color: white; border-radius: 8px; width: 46px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         
@@ -31,9 +31,10 @@
         .cmv-item b { display: block; font-size: 15px; color: var(--dark); }
         .cmv-item small { font-size: 9px; color: var(--text-muted); font-weight: bold; }
         .destaque-cmv { background: #dbeafe; grid-column: span 2; }
+        .destaque-receita { background: #ede9fe; grid-column: span 2; }
 
         .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { background: none; color: var(--text-muted); border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; }
+        .nav-item { background: none; color: var(--text-muted); border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; padding: 5px; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
 
         .list-img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; margin-right: 12px; background: #eee; }
@@ -42,6 +43,8 @@
 
         .hist-item { font-size: 11px; padding: 8px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 4px; border-radius: 4px; }
         .hist-date { color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
+        
+        optgroup { font-weight: bold; font-style: normal; color: var(--dark); }
     </style>
 </head>
 <body>
@@ -56,7 +59,8 @@
                 <div class="card"><h3>Painel Geral</h3><p>Gestão de Lucratividade</p></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="card" style="text-align: center;"><small>Insumos</small><h2 id="count-insumos">0</h2></div>
-                    <div class="card" style="text-align: center;"><small>Fichas</small><h2 id="count-lanches">0</h2></div>
+                    <div class="card" style="text-align: center;"><small>Lanches</small><h2 id="count-lanches">0</h2></div>
+                    <div class="card" style="text-align: center; grid-column: span 2;"><small>Receitas Base</small><h2 id="count-receitas">0</h2></div>
                 </div>
             </div>
 
@@ -99,23 +103,42 @@
 
             <div id="screen-lanches" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                    <h3>Fichas Técnicas</h3>
-                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirNovaFicha()">+ Criar</button>
+                    <h3>Lanches (Ficha Técnica)</h3>
+                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirNovaFicha('lanche')">+ Criar Lanche</button>
                 </div>
                 <div id="list-lanches"></div>
             </div>
 
+            <div id="screen-receitas" class="screen hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                    <h3 style="color: var(--receita)">Receitas Base</h3>
+                    <button class="btn-outline" style="width:auto; margin:0; border-color: var(--receita); color: var(--receita);" onclick="abrirNovaFicha('receita')">+ Criar Receita</button>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Preparações intermediárias (ex: molhos, massas) usadas em lanches.</p>
+                <div id="list-receitas"></div>
+            </div>
+
             <div id="screen-ficha" class="screen hidden">
-                <h3>Edição de Receita</h3>
+                <h3 id="ft-titulo-tela">Edição</h3>
+                <input type="hidden" id="ft-tipo-ficha">
+                
                 <div class="card">
                     <img id="ft-img-preview" src="sem foto.png" class="img-preview">
                     <input type="file" accept="image/*" onchange="previewImage(this)">
-                    <label>Nome da Receita</label><input type="text" id="ft-nome">
-                    <label>Preço de Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCMV()">
+                    <label>Nome do Produto</label><input type="text" id="ft-nome">
+                    
+                    <div id="bloco-lanche" class="hidden">
+                        <label>Preço de Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCMV()">
+                    </div>
+
+                    <div id="bloco-receita" class="hidden">
+                        <label style="color: var(--receita);">Rendimento (Qtd de Porções ou Unidades)</label>
+                        <input type="number" id="ft-rendimento" step="0.01" value="1" oninput="calcularCustoReceita()">
+                    </div>
                 </div>
 
-                <div class="card" style="border: 2px solid var(--primary);">
-                    <label>📈 Análise Financeira</label>
+                <div id="painel-fin-lanche" class="card hidden" style="border: 2px solid var(--primary);">
+                    <label>📈 Análise Financeira (Lanche)</label>
                     <div class="cmv-grid">
                         <div class="cmv-item destaque-cmv"><small>CMV DO PRATO (%)</small><b id="res-cmv-perc" style="font-size: 20px;">0%</b></div>
                         <div class="cmv-item"><small>CUSTO TOTAL</small><b id="res-custo">R$ 0,00</b></div>
@@ -125,8 +148,16 @@
                     </div>
                 </div>
 
+                <div id="painel-fin-receita" class="card hidden" style="border: 2px solid var(--receita);">
+                    <label style="color: var(--receita);">📊 Custo da Receita</label>
+                    <div class="cmv-grid">
+                        <div class="cmv-item destaque-receita"><small>CUSTO POR PORÇÃO</small><b id="res-custo-porcao" style="font-size: 20px; color: var(--receita);">R$ 0,00</b></div>
+                        <div class="cmv-item"><small>CUSTO TOTAL INSUMOS</small><b id="res-custo-total-rec">R$ 0,00</b></div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <label>Ingredientes / Insumos</label>
+                    <label>Ingredientes / Insumos / Outras Receitas</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <select id="ft-select-insumo" style="flex:3; margin:0"></select>
                         <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin:0">
@@ -152,8 +183,8 @@
                     <div id="ft-lista-historico" style="max-height: 120px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px; border: 1px solid var(--border);"></div>
                 </div>
 
-                <button class="btn-primary" onclick="salvarLanche()">SALVAR FICHA</button>
-                <button class="btn-outline" onclick="navegar('screen-lanches')">CANCELAR</button>
+                <button id="btn-salvar-ficha" class="btn-primary" onclick="salvarFicha()">SALVAR</button>
+                <button class="btn-outline" onclick="fecharFicha()">CANCELAR</button>
             </div>
             
             <div id="screen-classificacoes" class="screen hidden">
@@ -177,9 +208,10 @@
         </div>
 
         <nav class="nav-bar">
-            <button class="nav-item active" id="nav-home" onclick="navegar('screen-home')">Home</button>
-            <button class="nav-item" id="nav-insumos" onclick="navegar('screen-insumos')">Estoque</button>
-            <button class="nav-item" id="nav-lanches" onclick="navegar('screen-lanches')">Receitas</button>
+            <button class="nav-item active" id="nav-home" onclick="navegar('screen-home')">🏠<br>Home</button>
+            <button class="nav-item" id="nav-insumos" onclick="navegar('screen-insumos')">📦<br>Insumos</button>
+            <button class="nav-item" id="nav-receitas" onclick="navegar('screen-receitas')">🥣<br>Receitas</button>
+            <button class="nav-item" id="nav-lanches" onclick="navegar('screen-lanches')">🍔<br>Lanches</button>
         </nav>
     </div>
 
@@ -189,18 +221,20 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let insumos = [], lanches = [], marcas = [], classificacoes = [], fornecedores = [];
+        let insumos = [], lanches = [], receitasBase = [], marcas = [], classificacoes = [], fornecedores = [];
         let editingId = null, editingInsumoId = null, itensFicha = [], passosFicha = [], base64Img = "";
 
         async function carregarDados() {
             document.getElementById('loading-overlay').style.display = 'flex';
             try {
-                const [insS, lanS, marS, claS, forS] = await Promise.all([
-                    db.collection('insumos').get(), db.collection('receitas').get(),
+                // Adicionada a coleção 'receitas_base' 
+                const [insS, lanS, recS, marS, claS, forS] = await Promise.all([
+                    db.collection('insumos').get(), db.collection('receitas').get(), db.collection('receitas_base').get(),
                     db.collection('marcas').get(), db.collection('classificacoes').get(), db.collection('fornecedores').get()
                 ]);
                 insumos = insS.docs.map(d => ({id: d.id, ...d.data()}));
                 lanches = lanS.docs.map(d => ({id: d.id, ...d.data()}));
+                receitasBase = recS.docs.map(d => ({id: d.id, ...d.data()}));
                 marcas = marS.docs.map(d => ({id: d.id, ...d.data()}));
                 classificacoes = claS.docs.map(d => ({id: d.id, ...d.data()}));
                 fornecedores = forS.docs.map(d => ({id: d.id, ...d.data()}));
@@ -212,24 +246,34 @@
         function renderTudo() {
             filtrarInsumos();
             renderLanches();
+            renderReceitas();
             renderListaApoio('list-classificacoes', classificacoes, 'classificacoes');
             renderListaApoio('list-marcas', marcas, 'marcas');
             renderListaApoio('list-fornecedores', fornecedores, 'fornecedores');
             popularSelect('in-classificacao', classificacoes);
             popularSelect('in-marca', marcas);
             popularSelect('in-fornecedor', fornecedores);
-            popularSeletorComboFicha();
+            popularSeletorComboFicha(); // Agora puxa tudo
             document.getElementById('count-insumos').innerText = insumos.length;
             document.getElementById('count-lanches').innerText = lanches.length;
+            document.getElementById('count-receitas').innerText = receitasBase.length;
         }
 
         function navegar(id) { 
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
             document.getElementById(id).classList.remove('hidden'); 
+            
+            // Atualiza botões da navbar
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            if(id === 'screen-home') document.getElementById('nav-home').classList.add('active');
+            if(id === 'screen-insumos') document.getElementById('nav-insumos').classList.add('active');
+            if(id === 'screen-receitas') document.getElementById('nav-receitas').classList.add('active');
+            if(id === 'screen-lanches') document.getElementById('nav-lanches').classList.add('active');
+            
             window.scrollTo(0,0);
         }
 
-        // --- LÓGICA INSUMOS ---
+        // --- LÓGICA INSUMOS (MANTIDA IGUAL) ---
         function abrirFormInsumo() {
             editingInsumoId = null;
             document.getElementById('titulo-form-insumo').innerText = "Novo Insumo";
@@ -272,12 +316,10 @@
             if (editingInsumoId) {
                 const iAntigo = insumos.find(x => x.id === editingInsumoId);
                 let hist = iAntigo.historico || [];
-                
-                // Se o preço mudou, gera histórico
                 if (iAntigo.valor !== precoNovo) {
                     hist.unshift({ data: dataAtual, valor: precoNovo, info: "Alteração de Preço" });
                 }
-                obj.historico = hist.slice(0, 10); // Mantém as 10 últimas
+                obj.historico = hist.slice(0, 10);
                 await db.collection('insumos').doc(editingInsumoId).update(obj);
             } else {
                 obj.historico = [{ data: dataAtual, valor: precoNovo, info: "Cadastro Inicial" }];
@@ -287,79 +329,244 @@
             navegar('screen-insumos');
         }
 
-        // --- LÓGICA FICHAS ---
-        function abrirNovaFicha() {
+        function filtrarInsumos() {
+            const txt = document.getElementById('in-search-text').value.toLowerCase();
+            const filtrados = insumos.filter(i => i.nome.toLowerCase().includes(txt));
+            document.getElementById('list-insumos').innerHTML = filtrados.map(i => `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+                    <div><b>${i.nome}</b><br><small>R$ ${i.valor.toFixed(2)} / ${i.unidade}</small></div>
+                    <button class="btn-small" onclick="abrirEditarInsumo('${i.id}')">✏️</button>
+                </div>
+            `).join('');
+        }
+
+        // --- LÓGICA UNIFICADA: LANCHES E RECEITAS ---
+        
+        function abrirNovaFicha(tipo) {
             editingId = null;
             itensFicha = []; passosFicha = []; base64Img = "";
+            
+            document.getElementById('ft-tipo-ficha').value = tipo;
             document.getElementById('ft-nome').value = "";
-            document.getElementById('ft-venda-manual').value = "";
             document.getElementById('ft-obs').value = "";
             document.getElementById('ft-img-preview').src = "sem foto.png";
             document.getElementById('ft-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Sem histórico.</p>";
-            renderItensFicha(); renderPassos(); calcularCMV();
+            
+            if(tipo === 'lanche') {
+                document.getElementById('ft-titulo-tela').innerText = "Novo Lanche";
+                document.getElementById('ft-venda-manual').value = "";
+                document.getElementById('bloco-lanche').classList.remove('hidden');
+                document.getElementById('bloco-receita').classList.add('hidden');
+                document.getElementById('painel-fin-lanche').classList.remove('hidden');
+                document.getElementById('painel-fin-receita').classList.add('hidden');
+                document.getElementById('btn-salvar-ficha').className = "btn-primary";
+                document.getElementById('btn-salvar-ficha').innerText = "SALVAR LANCHE";
+                calcularCMV();
+            } else {
+                document.getElementById('ft-titulo-tela').innerText = "Nova Receita Base";
+                document.getElementById('ft-rendimento').value = "1";
+                document.getElementById('bloco-lanche').classList.add('hidden');
+                document.getElementById('bloco-receita').classList.remove('hidden');
+                document.getElementById('painel-fin-lanche').classList.add('hidden');
+                document.getElementById('painel-fin-receita').classList.remove('hidden');
+                document.getElementById('btn-salvar-ficha').className = "btn-receita";
+                document.getElementById('btn-salvar-ficha').innerText = "SALVAR RECEITA";
+                calcularCustoReceita();
+            }
+
+            renderItensFicha(); renderPassos();
             navegar('screen-ficha');
         }
 
-        function editarLanche(id) {
+        function editarFicha(id, tipo) {
             editingId = id;
-            const l = lanches.find(x => x.id === id);
-            document.getElementById('ft-nome').value = l.nome;
-            document.getElementById('ft-venda-manual').value = l.preco_venda || 0;
-            document.getElementById('ft-obs').value = l.observacoes || "";
-            base64Img = l.imagem || "";
-            document.getElementById('ft-img-preview').src = l.imagem || "sem foto.png";
-            itensFicha = [...(l.ingredientes || [])];
-            passosFicha = [...(l.passos || [])];
-            renderItensFicha(); renderPassos(); calcularCMV();
-            renderHistoricoGenerico('ft-lista-historico', l.historico || []);
+            document.getElementById('ft-tipo-ficha').value = tipo;
+            
+            let item;
+            if(tipo === 'lanche') {
+                item = lanches.find(x => x.id === id);
+                document.getElementById('ft-titulo-tela').innerText = "Editando Lanche";
+                document.getElementById('ft-venda-manual').value = item.preco_venda || 0;
+                
+                document.getElementById('bloco-lanche').classList.remove('hidden');
+                document.getElementById('bloco-receita').classList.add('hidden');
+                document.getElementById('painel-fin-lanche').classList.remove('hidden');
+                document.getElementById('painel-fin-receita').classList.add('hidden');
+                document.getElementById('btn-salvar-ficha').className = "btn-primary";
+                document.getElementById('btn-salvar-ficha').innerText = "SALVAR LANCHE";
+            } else {
+                item = receitasBase.find(x => x.id === id);
+                document.getElementById('ft-titulo-tela').innerText = "Editando Receita";
+                document.getElementById('ft-rendimento').value = item.rendimento || 1;
+                
+                document.getElementById('bloco-lanche').classList.add('hidden');
+                document.getElementById('bloco-receita').classList.remove('hidden');
+                document.getElementById('painel-fin-lanche').classList.add('hidden');
+                document.getElementById('painel-fin-receita').classList.remove('hidden');
+                document.getElementById('btn-salvar-ficha').className = "btn-receita";
+                document.getElementById('btn-salvar-ficha').innerText = "SALVAR RECEITA";
+            }
+
+            document.getElementById('ft-nome').value = item.nome;
+            document.getElementById('ft-obs').value = item.observacoes || "";
+            base64Img = item.imagem || "";
+            document.getElementById('ft-img-preview').src = item.imagem || "sem foto.png";
+            itensFicha = [...(item.ingredientes || [])];
+            passosFicha = [...(item.passos || [])];
+            
+            renderItensFicha(); renderPassos(); 
+            if(tipo === 'lanche') calcularCMV(); else calcularCustoReceita();
+            renderHistoricoGenerico('ft-lista-historico', item.historico || []);
+            
             navegar('screen-ficha');
         }
 
-        async function salvarLanche() {
-            const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+        function fecharFicha() {
+            const tipo = document.getElementById('ft-tipo-ficha').value;
+            if(tipo === 'lanche') navegar('screen-lanches');
+            else navegar('screen-receitas');
+        }
+
+        async function salvarFicha() {
+            const tipo = document.getElementById('ft-tipo-ficha').value;
+            const colecao = tipo === 'lanche' ? 'receitas' : 'receitas_base'; // Mantive 'receitas' pro lanche pra não quebrar seu BD antigo
+            
+            const custoTotalInsumos = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const dataAtual = new Date().toLocaleString('pt-BR');
             
-            const obj = {
+            let obj = {
                 nome: document.getElementById('ft-nome').value,
-                custo: custoTotal,
-                preco_venda: parseFloat(document.getElementById('ft-venda-manual').value) || 0,
                 ingredientes: itensFicha,
                 passos: passosFicha,
                 imagem: base64Img,
                 observacoes: document.getElementById('ft-obs').value
             };
 
+            let valorHistorico = 0;
+
+            if(tipo === 'lanche') {
+                obj.custo = custoTotalInsumos;
+                obj.preco_venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
+                valorHistorico = custoTotalInsumos;
+            } else {
+                const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
+                obj.custo_total = custoTotalInsumos;
+                obj.rendimento = rendimento;
+                obj.custo_porcao = custoTotalInsumos / rendimento;
+                valorHistorico = obj.custo_porcao;
+            }
+
             if (editingId) {
-                const lAntigo = lanches.find(x => x.id === editingId);
-                let hist = lAntigo.historico || [];
-                if (Math.abs(lAntigo.custo - custoTotal) > 0.01) {
-                    hist.unshift({ data: dataAtual, valor: custoTotal, info: "Atualização de Custo" });
+                const arrayFonte = tipo === 'lanche' ? lanches : receitasBase;
+                const itemAntigo = arrayFonte.find(x => x.id === editingId);
+                let hist = itemAntigo.historico || [];
+                
+                const valorAntigo = tipo === 'lanche' ? itemAntigo.custo : itemAntigo.custo_porcao;
+                
+                if (Math.abs(valorAntigo - valorHistorico) > 0.01) {
+                    hist.unshift({ data: dataAtual, valor: valorHistorico, info: tipo === 'lanche' ? "Custo do Lanche" : "Custo por Porção" });
                 }
                 obj.historico = hist.slice(0, 10);
-                await db.collection('receitas').doc(editingId).update(obj);
+                await db.collection(colecao).doc(editingId).update(obj);
             } else {
-                obj.historico = [{ data: dataAtual, valor: custoTotal, info: "Criação da Ficha" }];
-                await db.collection('receitas').add(obj);
+                obj.historico = [{ data: dataAtual, valor: valorHistorico, info: "Criação" }];
+                await db.collection(colecao).add(obj);
             }
+            
             await carregarDados();
-            navegar('screen-lanches');
+            fecharFicha();
         }
 
-        // --- AUXILIARES ---
-        function renderHistoricoGenerico(containerId, hist) {
-            const container = document.getElementById(containerId);
-            if (!hist || hist.length === 0) {
-                container.innerHTML = "<small>Nenhum histórico registrado.</small>";
-                return;
-            }
-            container.innerHTML = hist.map(h => `
-                <div class="hist-item">
-                    <span class="hist-date">${h.data}</span>
-                    <b>R$ ${h.valor.toFixed(2)}</b> - <small>${h.info || 'Atualização'}</small>
+        function renderLanches() {
+            document.getElementById('list-lanches').innerHTML = lanches.map(l => `
+                <div class="card" style="display:flex; align-items:center;">
+                    <img src="${l.imagem || 'sem foto.png'}" class="list-img">
+                    <div style="flex:1"><b>${l.nome}</b><br><small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small></div>
+                    <button class="btn-small" onclick="editarFicha('${l.id}', 'lanche')">✏️</button>
                 </div>
             `).join('');
         }
 
+        function renderReceitas() {
+            document.getElementById('list-receitas').innerHTML = receitasBase.map(r => `
+                <div class="card" style="display:flex; align-items:center; border-left: 4px solid var(--receita)">
+                    <img src="${r.imagem || 'sem foto.png'}" class="list-img">
+                    <div style="flex:1"><b>${r.nome}</b><br><small>Porção: R$ ${(r.custo_porcao || 0).toFixed(2)}</small></div>
+                    <button class="btn-small" onclick="editarFicha('${r.id}', 'receita')">✏️</button>
+                </div>
+            `).join('');
+        }
+
+        // --- SELETOR UNIFICADO (A MÁGICA ACONTECE AQUI) ---
+        function popularSeletorComboFicha() {
+            let h = '<option value="">Selecione para adicionar...</option>';
+            
+            h += '<optgroup label="📦 INSUMOS">';
+            insumos.forEach(i => h += `<option value="INS_${i.id}">${i.nome} - R$ ${i.valor.toFixed(2)}</option>`);
+            h += '</optgroup>';
+
+            if(receitasBase.length > 0) {
+                h += '<optgroup label="🥣 RECEITAS BASE (Porção)">';
+                receitasBase.forEach(r => h += `<option value="REC_${r.id}">${r.nome} - R$ ${(r.custo_porcao || 0).toFixed(2)}</option>`);
+                h += '</optgroup>';
+            }
+
+            if(lanches.length > 0) {
+                h += '<optgroup label="🍔 LANCHES (Inteiros)">';
+                lanches.forEach(l => h += `<option value="LAN_${l.id}">${l.nome} - R$ ${(l.custo || 0).toFixed(2)}</option>`);
+                h += '</optgroup>';
+            }
+
+            document.getElementById('ft-select-insumo').innerHTML = h;
+        }
+
+        function addItemFicha() {
+            const val = document.getElementById('ft-select-insumo').value;
+            const qtd = parseFloat(document.getElementById('ft-qtd').value);
+            if(!val || !qtd) return;
+            
+            const [tipo, id] = val.split('_');
+            let nomeItem = "";
+            let custoUnitario = 0;
+
+            if(tipo === 'INS') {
+                const i = insumos.find(x => x.id === id);
+                nomeItem = "[Insumo] " + i.nome;
+                custoUnitario = i.valor;
+            } else if (tipo === 'REC') {
+                const r = receitasBase.find(x => x.id === id);
+                nomeItem = "[Receita] " + r.nome;
+                custoUnitario = r.custo_porcao;
+            } else if (tipo === 'LAN') {
+                const l = lanches.find(x => x.id === id);
+                nomeItem = "[Lanche] " + l.nome;
+                custoUnitario = l.custo;
+            }
+
+            itensFicha.push({ nome: nomeItem, qtd: qtd, custo: custoUnitario * qtd });
+            renderItensFicha(); 
+            
+            const tipoFichaAtual = document.getElementById('ft-tipo-ficha').value;
+            if(tipoFichaAtual === 'lanche') calcularCMV(); else calcularCustoReceita();
+        }
+
+        function renderItensFicha() {
+            document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
+                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
+                    <span style="font-size:13px">${i.qtd}x ${i.nome}</span>
+                    <span>R$ ${i.custo.toFixed(2)} <button onclick="removerItemFicha(${idx})" style="color:red; background:none; border:none; padding:0 5px; font-weight:bold;">✕</button></span>
+                </div>
+            `).join('');
+        }
+
+        function removerItemFicha(idx) {
+            itensFicha.splice(idx, 1);
+            renderItensFicha();
+            const tipoFichaAtual = document.getElementById('ft-tipo-ficha').value;
+            if(tipoFichaAtual === 'lanche') calcularCMV(); else calcularCustoReceita();
+        }
+
+        // --- CÁLCULOS ---
         function calcularCMV() {
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const precoVenda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
@@ -376,49 +583,26 @@
             document.getElementById('res-cmv-perc').style.color = cmvReal > 35 ? 'var(--danger)' : 'var(--success)';
         }
 
-        function filtrarInsumos() {
-            const txt = document.getElementById('in-search-text').value.toLowerCase();
-            const filtrados = insumos.filter(i => i.nome.toLowerCase().includes(txt));
-            document.getElementById('list-insumos').innerHTML = filtrados.map(i => `
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center">
-                    <div><b>${i.nome}</b><br><small>R$ ${i.valor.toFixed(2)} / ${i.unidade}</small></div>
-                    <button class="btn-small" onclick="abrirEditarInsumo('${i.id}')">✏️</button>
-                </div>
-            `).join('');
+        function calcularCustoReceita() {
+            const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+            const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
+            const custoPorPorcao = custoTotal / rendimento;
+
+            document.getElementById('res-custo-total-rec').innerText = `R$ ${custoTotal.toFixed(2)}`;
+            document.getElementById('res-custo-porcao').innerText = `R$ ${custoPorPorcao.toFixed(2)}`;
         }
 
-        function renderLanches() {
-            document.getElementById('list-lanches').innerHTML = lanches.map(l => `
-                <div class="card" style="display:flex; align-items:center;">
-                    <img src="${l.imagem || 'sem foto.png'}" class="list-img">
-                    <div style="flex:1"><b>${l.nome}</b><br><small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small></div>
-                    <button class="btn-small" onclick="editarLanche('${l.id}')">✏️</button>
-                </div>
-            `).join('');
-        }
-
-        function popularSeletorComboFicha() {
-            let h = '<option value="">Selecione...</option><optgroup label="📦 INSUMOS">';
-            insumos.forEach(i => h += `<option value="INS_${i.id}">${i.nome} - R$ ${i.valor.toFixed(2)}</option>`);
-            h += '</optgroup>';
-            document.getElementById('ft-select-insumo').innerHTML = h;
-        }
-
-        function addItemFicha() {
-            const val = document.getElementById('ft-select-insumo').value;
-            const qtd = parseFloat(document.getElementById('ft-qtd').value);
-            if(!val || !qtd) return;
-            const id = val.split('_')[1];
-            const item = insumos.find(x => x.id === id);
-            itensFicha.push({ nome: item.nome, qtd, custo: item.valor * qtd });
-            renderItensFicha(); calcularCMV();
-        }
-
-        function renderItensFicha() {
-            document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
-                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
-                    <span>${i.qtd}x ${i.nome}</span>
-                    <span>R$ ${i.custo.toFixed(2)} <button onclick="itensFicha.splice(${idx},1);renderItensFicha();calcularCMV()" style="color:red; background:none; border:none; padding:0 5px">✕</button></span>
+        // --- RESTANTE INTACTO ---
+        function renderHistoricoGenerico(containerId, hist) {
+            const container = document.getElementById(containerId);
+            if (!hist || hist.length === 0) {
+                container.innerHTML = "<small>Nenhum histórico registrado.</small>";
+                return;
+            }
+            container.innerHTML = hist.map(h => `
+                <div class="hist-item">
+                    <span class="hist-date">${h.data}</span>
+                    <b>R$ ${h.valor.toFixed(2)}</b> - <small>${h.info || 'Atualização'}</small>
                 </div>
             `).join('');
         }
@@ -431,8 +615,8 @@
         function renderPassos() {
             document.getElementById('ft-lista-passos').innerHTML = passosFicha.map((p, i) => `
                 <div style="padding:5px; border-bottom:1px solid #eee; display:flex; justify-content:space-between">
-                    <span>${i+1}. ${p}</span>
-                    <button onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none">✕</button>
+                    <span style="font-size:13px">${i+1}. ${p}</span>
+                    <button onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none; font-weight:bold;">✕</button>
                 </div>
             `).join('');
         }
@@ -443,7 +627,7 @@
         }
 
         function renderListaApoio(divId, data, col) {
-            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red; background:none; border:none">✕</button></div>`).join('');
+            document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red; background:none; border:none; font-weight:bold;">✕</button></div>`).join('');
         }
 
         async function excluirItem(col, id) { if(confirm("Deseja realmente excluir este item?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
