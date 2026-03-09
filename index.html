@@ -126,6 +126,24 @@
                     <img id="ft-img-preview" src="sem foto.png" class="img-preview">
                     <input type="file" accept="image/*" onchange="previewImage(this)">
                     <label>Nome do Produto</label><input type="text" id="ft-nome">
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <label>Classificação</label>
+                            <div style="display: flex; gap: 5px;">
+                                <select id="ft-classificacao" style="margin-bottom: 0;"></select>
+                                <button onclick="navegar('screen-classificacoes')" class="btn-small">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Status</label>
+                            <select id="ft-status" style="margin-bottom: 0;">
+                                <option value="ativo">Ativo</option>
+                                <option value="em_teste">Em Teste</option>
+                                <option value="inativo">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
                     
                     <div id="bloco-lanche" class="hidden">
                         <label>Preço de Venda (R$)</label><input type="number" id="ft-venda-manual" step="0.01" oninput="calcularCMV()">
@@ -153,6 +171,7 @@
                     <div class="cmv-grid">
                         <div class="cmv-item destaque-receita"><small>CUSTO POR PORÇÃO</small><b id="res-custo-porcao" style="font-size: 20px; color: var(--receita);">R$ 0,00</b></div>
                         <div class="cmv-item"><small>CUSTO TOTAL INSUMOS</small><b id="res-custo-total-rec">R$ 0,00</b></div>
+                        <div class="cmv-item"><small>SUGESTÃO DE VENDA (35%)</small><b id="res-sugerido-rec" style="color:var(--success)">R$ 0,00</b></div>
                     </div>
                 </div>
 
@@ -216,7 +235,7 @@
     </div>
 
     <script>
-        // Configuração Firebase (Mantida)
+        // Configuração Firebase
         const firebaseConfig = { apiKey: "AIzaSyB1YIZSBbNWzbOLH6vLjkZN9C-vib2wXPk", authDomain: "chef-gg-pro.firebaseapp.com", projectId: "chef-gg-pro", storageBucket: "chef-gg-pro.firebasestorage.app", messagingSenderId: "183718681004", appId: "1:183718681004:web:bdd4749c8b4c904cd6c209" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -227,7 +246,6 @@
         async function carregarDados() {
             document.getElementById('loading-overlay').style.display = 'flex';
             try {
-                // Adicionada a coleção 'receitas_base' 
                 const [insS, lanS, recS, marS, claS, forS] = await Promise.all([
                     db.collection('insumos').get(), db.collection('receitas').get(), db.collection('receitas_base').get(),
                     db.collection('marcas').get(), db.collection('classificacoes').get(), db.collection('fornecedores').get()
@@ -251,9 +269,10 @@
             renderListaApoio('list-marcas', marcas, 'marcas');
             renderListaApoio('list-fornecedores', fornecedores, 'fornecedores');
             popularSelect('in-classificacao', classificacoes);
+            popularSelect('ft-classificacao', classificacoes); // Novo
             popularSelect('in-marca', marcas);
             popularSelect('in-fornecedor', fornecedores);
-            popularSeletorComboFicha(); // Agora puxa tudo
+            popularSeletorComboFicha();
             document.getElementById('count-insumos').innerText = insumos.length;
             document.getElementById('count-lanches').innerText = lanches.length;
             document.getElementById('count-receitas').innerText = receitasBase.length;
@@ -263,7 +282,6 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); 
             document.getElementById(id).classList.remove('hidden'); 
             
-            // Atualiza botões da navbar
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             if(id === 'screen-home') document.getElementById('nav-home').classList.add('active');
             if(id === 'screen-insumos') document.getElementById('nav-insumos').classList.add('active');
@@ -273,7 +291,6 @@
             window.scrollTo(0,0);
         }
 
-        // --- LÓGICA INSUMOS (MANTIDA IGUAL) ---
         function abrirFormInsumo() {
             editingInsumoId = null;
             document.getElementById('titulo-form-insumo').innerText = "Novo Insumo";
@@ -340,14 +357,14 @@
             `).join('');
         }
 
-        // --- LÓGICA UNIFICADA: LANCHES E RECEITAS ---
-        
         function abrirNovaFicha(tipo) {
             editingId = null;
             itensFicha = []; passosFicha = []; base64Img = "";
             
             document.getElementById('ft-tipo-ficha').value = tipo;
             document.getElementById('ft-nome').value = "";
+            document.getElementById('ft-classificacao').value = "";
+            document.getElementById('ft-status').value = "ativo";
             document.getElementById('ft-obs').value = "";
             document.getElementById('ft-img-preview').src = "sem foto.png";
             document.getElementById('ft-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Sem histórico.</p>";
@@ -408,6 +425,8 @@
             }
 
             document.getElementById('ft-nome').value = item.nome;
+            document.getElementById('ft-classificacao').value = item.classificacao || "";
+            document.getElementById('ft-status').value = item.status || "ativo";
             document.getElementById('ft-obs').value = item.observacoes || "";
             base64Img = item.imagem || "";
             document.getElementById('ft-img-preview').src = item.imagem || "sem foto.png";
@@ -429,13 +448,15 @@
 
         async function salvarFicha() {
             const tipo = document.getElementById('ft-tipo-ficha').value;
-            const colecao = tipo === 'lanche' ? 'receitas' : 'receitas_base'; // Mantive 'receitas' pro lanche pra não quebrar seu BD antigo
+            const colecao = tipo === 'lanche' ? 'receitas' : 'receitas_base';
             
             const custoTotalInsumos = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const dataAtual = new Date().toLocaleString('pt-BR');
             
             let obj = {
                 nome: document.getElementById('ft-nome').value,
+                classificacao: document.getElementById('ft-classificacao').value,
+                status: document.getElementById('ft-status').value,
                 ingredientes: itensFicha,
                 passos: passosFicha,
                 imagem: base64Img,
@@ -481,7 +502,10 @@
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
                 <div class="card" style="display:flex; align-items:center;">
                     <img src="${l.imagem || 'sem foto.png'}" class="list-img">
-                    <div style="flex:1"><b>${l.nome}</b><br><small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small></div>
+                    <div style="flex:1">
+                        <b>${l.nome}</b> <span style="font-size:10px; color:gray;">[${l.status || 'ativo'}]</span><br>
+                        <small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small>
+                    </div>
                     <button class="btn-small" onclick="editarFicha('${l.id}', 'lanche')">✏️</button>
                 </div>
             `).join('');
@@ -491,13 +515,15 @@
             document.getElementById('list-receitas').innerHTML = receitasBase.map(r => `
                 <div class="card" style="display:flex; align-items:center; border-left: 4px solid var(--receita)">
                     <img src="${r.imagem || 'sem foto.png'}" class="list-img">
-                    <div style="flex:1"><b>${r.nome}</b><br><small>Porção: R$ ${(r.custo_porcao || 0).toFixed(2)}</small></div>
+                    <div style="flex:1">
+                        <b>${r.nome}</b> <span style="font-size:10px; color:gray;">[${r.status || 'ativo'}]</span><br>
+                        <small>Porção: R$ ${(r.custo_porcao || 0).toFixed(2)}</small>
+                    </div>
                     <button class="btn-small" onclick="editarFicha('${r.id}', 'receita')">✏️</button>
                 </div>
             `).join('');
         }
 
-        // --- SELETOR UNIFICADO (A MÁGICA ACONTECE AQUI) ---
         function popularSeletorComboFicha() {
             let h = '<option value="">Selecione para adicionar...</option>';
             
@@ -566,7 +592,6 @@
             if(tipoFichaAtual === 'lanche') calcularCMV(); else calcularCustoReceita();
         }
 
-        // --- CÁLCULOS ---
         function calcularCMV() {
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const precoVenda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
@@ -587,12 +612,13 @@
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
             const custoPorPorcao = custoTotal / rendimento;
+            const sugerido = custoPorPorcao / 0.35; // Nova sugestão de venda para porção da receita base
 
             document.getElementById('res-custo-total-rec').innerText = `R$ ${custoTotal.toFixed(2)}`;
             document.getElementById('res-custo-porcao').innerText = `R$ ${custoPorPorcao.toFixed(2)}`;
+            document.getElementById('res-sugerido-rec').innerText = `R$ ${sugerido.toFixed(2)}`;
         }
 
-        // --- RESTANTE INTACTO ---
         function renderHistoricoGenerico(containerId, hist) {
             const container = document.getElementById(containerId);
             if (!hist || hist.length === 0) {
