@@ -81,7 +81,7 @@
                         <div><label>Preço Atual</label><input type="number" id="in-preco" step="0.01"></div>
                         <div><label>Unidade</label><select id="in-un"><option>kg</option><option>un</option><option>lt</option></select></div>
                     </div>
-                    <label>Categoria</label>
+                    <label>Classificação (Insumo)</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 12px;"><select id="in-classificacao"></select><button onclick="navegar('screen-classificacoes')" class="btn-small">+</button></div>
                     <label>Marca</label>
                     <div style="display: flex; gap: 5px; margin-bottom: 12px;"><select id="in-marca"></select><button onclick="navegar('screen-marcas')" class="btn-small">+</button></div>
@@ -129,10 +129,10 @@
 
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
                         <div>
-                            <label>Classificação</label>
+                            <label>Tipo de Prato</label>
                             <div style="display: flex; gap: 5px;">
-                                <select id="ft-classificacao" style="margin-bottom: 0;"></select>
-                                <button onclick="navegar('screen-classificacoes')" class="btn-small">+</button>
+                                <select id="ft-tipo-prato" style="margin-bottom: 0;"></select>
+                                <button onclick="navegar('screen-tipos-prato')" class="btn-small">+</button>
                             </div>
                         </div>
                         <div>
@@ -207,11 +207,20 @@
             </div>
             
             <div id="screen-classificacoes" class="screen hidden">
-                <h3>Categorias</h3>
+                <h3>Classificações (Insumos)</h3>
                 <div class="card"><input type="text" id="class-novo-nome"><button onclick="salvarApoio('classificacoes','class-novo-nome')" class="btn-primary">Adicionar</button></div>
                 <div id="list-classificacoes"></div>
                 <button class="btn-outline" onclick="navegar('screen-form-insumo')">Voltar</button>
             </div>
+            
+            <div id="screen-tipos-prato" class="screen hidden">
+                <h3>Tipos de Prato</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Ex: Entradas, Sobremesas, Burgers, Dogs...</p>
+                <div class="card"><input type="text" id="tipo-prato-novo-nome"><button onclick="salvarApoio('tipos_prato','tipo-prato-novo-nome')" class="btn-primary">Adicionar</button></div>
+                <div id="list-tipos-prato"></div>
+                <button class="btn-outline" onclick="navegar('screen-ficha')">Voltar</button>
+            </div>
+
             <div id="screen-fornecedores" class="screen hidden">
                 <h3>Fornecedores</h3>
                 <div class="card"><input type="text" id="forn-novo-nome"><button onclick="salvarApoio('fornecedores','forn-novo-nome')" class="btn-primary">Adicionar</button></div>
@@ -240,15 +249,18 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let insumos = [], lanches = [], receitasBase = [], marcas = [], classificacoes = [], fornecedores = [];
+        // ADICIONADO: tiposPrato
+        let insumos = [], lanches = [], receitasBase = [], marcas = [], classificacoes = [], fornecedores = [], tiposPrato = [];
         let editingId = null, editingInsumoId = null, itensFicha = [], passosFicha = [], base64Img = "";
 
         async function carregarDados() {
             document.getElementById('loading-overlay').style.display = 'flex';
             try {
-                const [insS, lanS, recS, marS, claS, forS] = await Promise.all([
+                // ADICIONADO: db.collection('tipos_prato').get()
+                const [insS, lanS, recS, marS, claS, forS, tipoS] = await Promise.all([
                     db.collection('insumos').get(), db.collection('receitas').get(), db.collection('receitas_base').get(),
-                    db.collection('marcas').get(), db.collection('classificacoes').get(), db.collection('fornecedores').get()
+                    db.collection('marcas').get(), db.collection('classificacoes').get(), db.collection('fornecedores').get(),
+                    db.collection('tipos_prato').get()
                 ]);
                 insumos = insS.docs.map(d => ({id: d.id, ...d.data()}));
                 lanches = lanS.docs.map(d => ({id: d.id, ...d.data()}));
@@ -256,6 +268,7 @@
                 marcas = marS.docs.map(d => ({id: d.id, ...d.data()}));
                 classificacoes = claS.docs.map(d => ({id: d.id, ...d.data()}));
                 fornecedores = forS.docs.map(d => ({id: d.id, ...d.data()}));
+                tiposPrato = tipoS.docs.map(d => ({id: d.id, ...d.data()})); // Mapeando a nova coleção
                 renderTudo();
             } catch (e) { console.error(e); }
             document.getElementById('loading-overlay').style.display = 'none';
@@ -268,11 +281,15 @@
             renderListaApoio('list-classificacoes', classificacoes, 'classificacoes');
             renderListaApoio('list-marcas', marcas, 'marcas');
             renderListaApoio('list-fornecedores', fornecedores, 'fornecedores');
-            popularSelect('in-classificacao', classificacoes);
-            popularSelect('ft-classificacao', classificacoes); // Novo
+            renderListaApoio('list-tipos-prato', tiposPrato, 'tipos_prato'); // Renderizando a nova tela de apoio
+            
+            popularSelect('in-classificacao', classificacoes); // Mantido o original para o insumo
+            popularSelect('ft-tipo-prato', tiposPrato); // Inserido o novo para a ficha técnica
+            
             popularSelect('in-marca', marcas);
             popularSelect('in-fornecedor', fornecedores);
             popularSeletorComboFicha();
+            
             document.getElementById('count-insumos').innerText = insumos.length;
             document.getElementById('count-lanches').innerText = lanches.length;
             document.getElementById('count-receitas').innerText = receitasBase.length;
@@ -363,7 +380,7 @@
             
             document.getElementById('ft-tipo-ficha').value = tipo;
             document.getElementById('ft-nome').value = "";
-            document.getElementById('ft-classificacao').value = "";
+            document.getElementById('ft-tipo-prato').value = ""; // ATUALIZADO
             document.getElementById('ft-status').value = "ativo";
             document.getElementById('ft-obs').value = "";
             document.getElementById('ft-img-preview').src = "sem foto.png";
@@ -425,7 +442,7 @@
             }
 
             document.getElementById('ft-nome').value = item.nome;
-            document.getElementById('ft-classificacao').value = item.classificacao || "";
+            document.getElementById('ft-tipo-prato').value = item.tipo_prato || ""; // ATUALIZADO
             document.getElementById('ft-status').value = item.status || "ativo";
             document.getElementById('ft-obs').value = item.observacoes || "";
             base64Img = item.imagem || "";
@@ -455,7 +472,7 @@
             
             let obj = {
                 nome: document.getElementById('ft-nome').value,
-                classificacao: document.getElementById('ft-classificacao').value,
+                tipo_prato: document.getElementById('ft-tipo-prato').value, // ATUALIZADO (salva no banco como tipo_prato)
                 status: document.getElementById('ft-status').value,
                 ingredientes: itensFicha,
                 passos: passosFicha,
@@ -497,177 +514,348 @@
             await carregarDados();
             fecharFicha();
         }
+function renderLanches() {
 
-        function renderLanches() {
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
+
                 <div class="card" style="display:flex; align-items:center;">
+
                     <img src="${l.imagem || 'sem foto.png'}" class="list-img">
+
                     <div style="flex:1">
+
                         <b>${l.nome}</b> <span style="font-size:10px; color:gray;">[${l.status || 'ativo'}]</span><br>
+
                         <small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small>
+
                     </div>
+
                     <button class="btn-small" onclick="editarFicha('${l.id}', 'lanche')">✏️</button>
+
                 </div>
+
             `).join('');
+
         }
+
+
 
         function renderReceitas() {
+
             document.getElementById('list-receitas').innerHTML = receitasBase.map(r => `
+
                 <div class="card" style="display:flex; align-items:center; border-left: 4px solid var(--receita)">
+
                     <img src="${r.imagem || 'sem foto.png'}" class="list-img">
+
                     <div style="flex:1">
+
                         <b>${r.nome}</b> <span style="font-size:10px; color:gray;">[${r.status || 'ativo'}]</span><br>
+
                         <small>Porção: R$ ${(r.custo_porcao || 0).toFixed(2)}</small>
+
                     </div>
+
                     <button class="btn-small" onclick="editarFicha('${r.id}', 'receita')">✏️</button>
+
                 </div>
+
             `).join('');
+
         }
+
+
 
         function popularSeletorComboFicha() {
+
             let h = '<option value="">Selecione para adicionar...</option>';
+
             
+
             h += '<optgroup label="📦 INSUMOS">';
+
             insumos.forEach(i => h += `<option value="INS_${i.id}">${i.nome} - R$ ${i.valor.toFixed(2)}</option>`);
+
             h += '</optgroup>';
 
+
+
             if(receitasBase.length > 0) {
+
                 h += '<optgroup label="🥣 RECEITAS BASE (Porção)">';
+
                 receitasBase.forEach(r => h += `<option value="REC_${r.id}">${r.nome} - R$ ${(r.custo_porcao || 0).toFixed(2)}</option>`);
+
                 h += '</optgroup>';
+
             }
+
+
 
             if(lanches.length > 0) {
+
                 h += '<optgroup label="🍔 LANCHES (Inteiros)">';
+
                 lanches.forEach(l => h += `<option value="LAN_${l.id}">${l.nome} - R$ ${(l.custo || 0).toFixed(2)}</option>`);
+
                 h += '</optgroup>';
+
             }
+
+
 
             document.getElementById('ft-select-insumo').innerHTML = h;
+
         }
+
+
 
         function addItemFicha() {
+
             const val = document.getElementById('ft-select-insumo').value;
+
             const qtd = parseFloat(document.getElementById('ft-qtd').value);
+
             if(!val || !qtd) return;
+
             
+
             const [tipo, id] = val.split('_');
+
             let nomeItem = "";
+
             let custoUnitario = 0;
 
+
+
             if(tipo === 'INS') {
+
                 const i = insumos.find(x => x.id === id);
+
                 nomeItem = "[Insumo] " + i.nome;
+
                 custoUnitario = i.valor;
+
             } else if (tipo === 'REC') {
+
                 const r = receitasBase.find(x => x.id === id);
+
                 nomeItem = "[Receita] " + r.nome;
+
                 custoUnitario = r.custo_porcao;
+
             } else if (tipo === 'LAN') {
+
                 const l = lanches.find(x => x.id === id);
+
                 nomeItem = "[Lanche] " + l.nome;
+
                 custoUnitario = l.custo;
+
             }
+
+
 
             itensFicha.push({ nome: nomeItem, qtd: qtd, custo: custoUnitario * qtd });
+
             renderItensFicha(); 
+
             
+
             const tipoFichaAtual = document.getElementById('ft-tipo-ficha').value;
+
             if(tipoFichaAtual === 'lanche') calcularCMV(); else calcularCustoReceita();
+
         }
+
+
 
         function renderItensFicha() {
+
             document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
+
                 <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
+
                     <span style="font-size:13px">${i.qtd}x ${i.nome}</span>
+
                     <span>R$ ${i.custo.toFixed(2)} <button onclick="removerItemFicha(${idx})" style="color:red; background:none; border:none; padding:0 5px; font-weight:bold;">✕</button></span>
+
                 </div>
+
             `).join('');
+
         }
+
+
 
         function removerItemFicha(idx) {
+
             itensFicha.splice(idx, 1);
+
             renderItensFicha();
+
             const tipoFichaAtual = document.getElementById('ft-tipo-ficha').value;
+
             if(tipoFichaAtual === 'lanche') calcularCMV(); else calcularCustoReceita();
+
         }
+
+
 
         function calcularCMV() {
+
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+
             const precoVenda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
+
             const cmvReal = precoVenda > 0 ? (custoTotal / precoVenda) * 100 : 0;
+
             const margem = precoVenda > 0 ? ((precoVenda - custoTotal) / precoVenda) * 100 : 0;
+
             const lucro = precoVenda - custoTotal;
+
             const sugerido = custoTotal / 0.35;
 
+
+
             document.getElementById('res-cmv-perc').innerText = `${cmvReal.toFixed(1)}%`;
+
             document.getElementById('res-custo').innerText = `R$ ${custoTotal.toFixed(2)}`;
+
             document.getElementById('res-margem').innerText = `${margem.toFixed(1)}%`;
+
             document.getElementById('res-lucro').innerText = `R$ ${lucro.toFixed(2)}`;
+
             document.getElementById('res-sugerido').innerText = `R$ ${sugerido.toFixed(2)}`;
+
             document.getElementById('res-cmv-perc').style.color = cmvReal > 35 ? 'var(--danger)' : 'var(--success)';
+
         }
+
+
 
         function calcularCustoReceita() {
+
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+
             const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
+
             const custoPorPorcao = custoTotal / rendimento;
+
             const sugerido = custoPorPorcao / 0.35; // Nova sugestão de venda para porção da receita base
 
+
+
             document.getElementById('res-custo-total-rec').innerText = `R$ ${custoTotal.toFixed(2)}`;
+
             document.getElementById('res-custo-porcao').innerText = `R$ ${custoPorPorcao.toFixed(2)}`;
+
             document.getElementById('res-sugerido-rec').innerText = `R$ ${sugerido.toFixed(2)}`;
+
         }
+
+
 
         function renderHistoricoGenerico(containerId, hist) {
+
             const container = document.getElementById(containerId);
+
             if (!hist || hist.length === 0) {
+
                 container.innerHTML = "<small>Nenhum histórico registrado.</small>";
+
                 return;
+
             }
+
             container.innerHTML = hist.map(h => `
+
                 <div class="hist-item">
+
                     <span class="hist-date">${h.data}</span>
+
                     <b>R$ ${h.valor.toFixed(2)}</b> - <small>${h.info || 'Atualização'}</small>
+
                 </div>
+
             `).join('');
+
         }
+
+
 
         function addPasso() {
+
             const txt = document.getElementById('ft-passo-input').value;
+
             if(txt) { passosFicha.push(txt); document.getElementById('ft-passo-input').value = ''; renderPassos(); }
+
         }
+
+
 
         function renderPassos() {
+
             document.getElementById('ft-lista-passos').innerHTML = passosFicha.map((p, i) => `
+
                 <div style="padding:5px; border-bottom:1px solid #eee; display:flex; justify-content:space-between">
+
                     <span style="font-size:13px">${i+1}. ${p}</span>
+
                     <button onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none; font-weight:bold;">✕</button>
+
                 </div>
+
             `).join('');
+
         }
+
+
 
         function popularSelect(id, lista) {
+
             const el = document.getElementById(id);
+
             if(el) el.innerHTML = '<option value="">Selecione...</option>' + lista.map(item => `<option value="${item.nome}">${item.nome}</option>`).join('');
+
         }
+
+
 
         function renderListaApoio(divId, data, col) {
+
             document.getElementById(divId).innerHTML = data.map(i => `<div class="card" style="padding:10px; display:flex; justify-content:space-between">${i.nome}<button onclick="excluirItem('${col}','${i.id}')" style="color:red; background:none; border:none; font-weight:bold;">✕</button></div>`).join('');
+
         }
+
+
 
         async function excluirItem(col, id) { if(confirm("Deseja realmente excluir este item?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
+
         async function salvarApoio(col, inputId) { const nome = document.getElementById(inputId).value; if(nome) { await db.collection(col).add({nome}); document.getElementById(inputId).value=''; carregarDados(); } }
+
         
+
         function previewImage(i) {
+
             if(i.files[0]) {
+
                 const r = new FileReader();
+
                 r.onload = e => { base64Img = e.target.result; document.getElementById('ft-img-preview').src = base64Img; };
+
                 r.readAsDataURL(i.files[0]);
+
             }
+
         }
 
+
+
         carregarDados();
+
     </script>
+
 </body>
+
 </html>
