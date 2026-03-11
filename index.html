@@ -45,6 +45,51 @@
         .hist-date { color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
         
         optgroup { font-weight: bold; font-style: normal; color: var(--dark); }
+
+        /* --- CONFIGURAÇÃO DE IMPRESSÃO PROFISSIONAL (NBR 14724) --- */
+        @media print {
+            @page {
+                size: A4;
+                margin: 3cm 2cm 2cm 3cm; /* Margens NBR 14724 */
+            }
+
+            body {
+                font-family: Arial, sans-serif; /* Fonte padrão normativa */
+                font-size: 12pt;
+                line-height: 1.5;
+                color: #000;
+                background: white;
+            }
+
+            /* Esconde elementos que não devem sair no papel */
+            .no-print, .btn-excluir, .nav-bar, button {
+                display: none !important;
+            }
+
+            .app-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .card {
+                border: 1px solid #ccc;
+                page-break-inside: avoid;
+                box-shadow: none;
+            }
+
+            .cmv-grid {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            h1, h2, h3 {
+                text-align: center;
+                text-transform: uppercase;
+                color: #000;
+            }
+        }
     </style>
 </head>
 <body>
@@ -67,9 +112,9 @@
             <div id="screen-insumos" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
                     <h3>Estoque de Insumos</h3>
-                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirFormInsumo()">+ Novo</button>
+                    <button class="btn-outline no-print" style="width:auto; margin:0" onclick="abrirFormInsumo()">+ Novo</button>
                 </div>
-                <input type="text" id="in-search-text" placeholder="🔍 Buscar insumo..." oninput="filtrarInsumos()" style="background:#f1f5f9; border:none">
+                <input type="text" id="in-search-text" class="no-print" placeholder="🔍 Buscar insumo..." oninput="filtrarInsumos()" style="background:#f1f5f9; border:none">
                 <div id="list-insumos"></div>
             </div>
 
@@ -121,7 +166,7 @@
             <div id="screen-lanches" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
                     <h3>Lanches (Ficha Técnica)</h3>
-                    <button class="btn-outline" style="width:auto; margin:0" onclick="abrirNovaFicha('lanche')">+ Criar Lanche</button>
+                    <button class="btn-outline no-print" style="width:auto; margin:0" onclick="abrirNovaFicha('lanche')">+ Criar Lanche</button>
                 </div>
                 <div id="list-lanches"></div>
             </div>
@@ -129,19 +174,22 @@
             <div id="screen-receitas" class="screen hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
                     <h3 style="color: var(--receita)">Receitas Base</h3>
-                    <button class="btn-outline" style="width:auto; margin:0; border-color: var(--receita); color: var(--receita);" onclick="abrirNovaFicha('receita')">+ Criar Receita</button>
+                    <button class="btn-outline no-print" style="width:auto; margin:0; border-color: var(--receita); color: var(--receita);" onclick="abrirNovaFicha('receita')">+ Criar Receita</button>
                 </div>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Preparações intermediárias (ex: molhos, massas) usadas em lanches.</p>
                 <div id="list-receitas"></div>
             </div>
 
             <div id="screen-ficha" class="screen hidden">
-                <h3 id="ft-titulo-tela">Edição</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="ft-titulo-tela">Edição</h3>
+                    <button class="btn-small no-print" style="background:var(--dark); width:auto;" onclick="window.print()">🖨️ Imprimir</button>
+                </div>
                 <input type="hidden" id="ft-tipo-ficha">
                 
                 <div class="card">
                     <img id="ft-img-preview" src="sem foto.png" class="img-preview">
-                    <input type="file" accept="image/*" onchange="previewImage(this)">
+                    <input type="file" class="no-print" accept="image/*" onchange="previewImage(this)">
                     <label>Nome do Produto</label><input type="text" id="ft-nome">
 
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
@@ -149,7 +197,7 @@
                             <label>Tipo de Prato</label>
                             <div style="display: flex; gap: 5px;">
                                 <select id="ft-tipo-prato" style="margin-bottom: 0;"></select>
-                                <button onclick="navegar('screen-tipos-prato')" class="btn-small">+</button>
+                                <button onclick="navegar('screen-tipos-prato')" class="btn-small no-print">+</button>
                             </div>
                         </div>
                         <div>
@@ -188,13 +236,12 @@
                     <div class="cmv-grid">
                         <div class="cmv-item destaque-receita"><small>CUSTO POR PORÇÃO</small><b id="res-custo-porcao" style="font-size: 20px; color: var(--receita);">R$ 0,00</b></div>
                         <div class="cmv-item"><small>CUSTO TOTAL INSUMOS</small><b id="res-custo-total-rec">R$ 0,00</b></div>
-                        <div class="cmv-item"><small>SUGESTÃO DE VENDA (35%)</small><b id="res-sugerido-rec" style="color:var(--success)">R$ 0,00</b></div>
-                    </div>
+                        </div>
                 </div>
 
                 <div class="card">
                     <label>Ingredientes / Insumos / Outras Receitas</label>
-                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <div class="no-print" style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <select id="ft-select-insumo" style="flex:3; margin:0"></select>
                         <input type="number" id="ft-qtd" placeholder="Qtd" style="flex:1; margin:0">
                         <button onclick="addItemFicha()" class="btn-small" style="background:var(--success)">+</button>
@@ -207,20 +254,20 @@
                     <textarea id="ft-obs" placeholder="Dicas de montagem, tempo de fogo, observações gerais..."></textarea>
                     
                     <label style="margin-top:10px">Passo a Passo</label>
-                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <div class="no-print" style="display: flex; gap: 5px; margin-bottom: 10px;">
                         <input type="text" id="ft-passo-input" placeholder="Próximo passo..." style="margin:0">
                         <button onclick="addPasso()" class="btn-small" style="background:var(--primary)">+</button>
                     </div>
                     <div id="ft-lista-passos"></div>
                 </div>
 
-                <div class="card" id="card-hist-ficha">
+                <div class="card no-print" id="card-hist-ficha">
                     <label>📊 Histórico de Custos</label>
                     <div id="ft-lista-historico" style="max-height: 120px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px; border: 1px solid var(--border);"></div>
                 </div>
 
-                <button id="btn-salvar-ficha" class="btn-primary" onclick="salvarFicha()">SALVAR</button>
-                <button class="btn-outline" onclick="fecharFicha()">CANCELAR</button>
+                <button id="btn-salvar-ficha" class="btn-primary no-print" onclick="salvarFicha()">SALVAR</button>
+                <button class="btn-outline no-print" onclick="fecharFicha()">CANCELAR</button>
             </div>
             
             <div id="screen-classificacoes" class="screen hidden">
@@ -323,7 +370,6 @@
             window.scrollTo(0,0);
         }
 
-        // --- NOVA FUNÇÃO DE CÁLCULO ---
         function calcularCustoUnitarioInsumo() {
             const vol = parseFloat(document.getElementById('in-volume').value);
             const valorEmb = parseFloat(document.getElementById('in-valor-emb').value);
@@ -331,7 +377,8 @@
 
             if (vol > 0 && !isNaN(valorEmb)) {
                 const custoUnitario = valorEmb / vol;
-                inputPreco.value = custoUnitario.toFixed(3); // Mantém precisão interna
+                // Refatoração: Restrito a 2 casas decimais para precisão contábil
+                inputPreco.value = custoUnitario.toFixed(2); 
             } else {
                 inputPreco.value = "";
             }
@@ -341,8 +388,8 @@
             editingInsumoId = null;
             document.getElementById('titulo-form-insumo').innerText = "Novo Insumo";
             document.getElementById('in-nome').value = "";
-            document.getElementById('in-volume').value = ""; // Limpa campo novo
-            document.getElementById('in-valor-emb').value = ""; // Limpa campo novo
+            document.getElementById('in-volume').value = ""; 
+            document.getElementById('in-valor-emb').value = ""; 
             document.getElementById('in-preco').value = "";
             document.getElementById('in-obs').value = "";
             document.getElementById('in-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Insumo novo não possui histórico.</p>";
@@ -354,8 +401,8 @@
             const i = insumos.find(x => x.id === id);
             document.getElementById('titulo-form-insumo').innerText = "Editando: " + i.nome;
             document.getElementById('in-nome').value = i.nome;
-            document.getElementById('in-volume').value = i.volumeEmbalagem || ""; // Recupera se existir
-            document.getElementById('in-valor-emb').value = i.valorEmbalagem || ""; // Recupera se existir
+            document.getElementById('in-volume').value = i.volumeEmbalagem || ""; 
+            document.getElementById('in-valor-emb').value = i.valorEmbalagem || ""; 
             document.getElementById('in-preco').value = i.valor;
             document.getElementById('in-un').value = i.unidade || "kg";
             document.getElementById('in-classificacao').value = i.classificacao || "";
@@ -373,8 +420,8 @@
             const obj = {
                 nome: document.getElementById('in-nome').value,
                 valor: precoNovo,
-                volumeEmbalagem: parseFloat(document.getElementById('in-volume').value) || null, // Salva o campo novo
-                valorEmbalagem: parseFloat(document.getElementById('in-valor-emb').value) || null, // Salva o campo novo
+                volumeEmbalagem: parseFloat(document.getElementById('in-volume').value) || null,
+                valorEmbalagem: parseFloat(document.getElementById('in-valor-emb').value) || null,
                 unidade: document.getElementById('in-un').value,
                 classificacao: document.getElementById('in-classificacao').value,
                 marca: document.getElementById('in-marca').value,
@@ -421,84 +468,133 @@
             document.getElementById('ft-img-preview').src = "sem foto.png";
             document.getElementById('ft-lista-historico').innerHTML = "<p style='font-size:12px; color:gray'>Sem histórico.</p>";
             
-            if(tipo === 'lanche') {
+            if (tipo === 'lanche') {
                 document.getElementById('ft-titulo-tela').innerText = "Novo Lanche";
-                document.getElementById('ft-venda-manual').value = "";
                 document.getElementById('bloco-lanche').classList.remove('hidden');
-                document.getElementById('bloco-receita').classList.add('hidden');
                 document.getElementById('painel-fin-lanche').classList.remove('hidden');
+                document.getElementById('bloco-receita').classList.add('hidden');
                 document.getElementById('painel-fin-receita').classList.add('hidden');
-                document.getElementById('btn-salvar-ficha').className = "btn-primary";
-                document.getElementById('btn-salvar-ficha').innerText = "SALVAR LANCHE";
-                calcularCMV();
+                document.getElementById('ft-venda-manual').value = "";
             } else {
                 document.getElementById('ft-titulo-tela').innerText = "Nova Receita Base";
-                document.getElementById('ft-rendimento').value = "1";
-                document.getElementById('bloco-lanche').classList.add('hidden');
                 document.getElementById('bloco-receita').classList.remove('hidden');
-                document.getElementById('painel-fin-lanche').classList.add('hidden');
                 document.getElementById('painel-fin-receita').classList.remove('hidden');
-                document.getElementById('btn-salvar-ficha').className = "btn-receita";
-                document.getElementById('btn-salvar-ficha').innerText = "SALVAR RECEITA";
-                calcularCustoReceita();
+                document.getElementById('bloco-lanche').classList.add('hidden');
+                document.getElementById('painel-fin-lanche').classList.add('hidden');
+                document.getElementById('ft-rendimento').value = "1";
             }
-
-            renderItensFicha(); renderPassos();
+            
+            renderItensFicha();
+            renderPassos();
+            if(tipo === 'lanche') calcularCMV(); else calcularCustoReceita();
             navegar('screen-ficha');
         }
 
         function editarFicha(id, tipo) {
             editingId = id;
             document.getElementById('ft-tipo-ficha').value = tipo;
+            const arrayFonte = tipo === 'lanche' ? lanches : receitasBase;
+            const item = arrayFonte.find(x => x.id === id);
             
-            let item;
-            if(tipo === 'lanche') {
-                item = lanches.find(x => x.id === id);
-                document.getElementById('ft-titulo-tela').innerText = "Editando Lanche";
-                document.getElementById('ft-venda-manual').value = item.preco_venda || 0;
-                
-                document.getElementById('bloco-lanche').classList.remove('hidden');
-                document.getElementById('bloco-receita').classList.add('hidden');
-                document.getElementById('painel-fin-lanche').classList.remove('hidden');
-                document.getElementById('painel-fin-receita').classList.add('hidden');
-                document.getElementById('btn-salvar-ficha').className = "btn-primary";
-                document.getElementById('btn-salvar-ficha').innerText = "SALVAR LANCHE";
-            } else {
-                item = receitasBase.find(x => x.id === id);
-                document.getElementById('ft-titulo-tela').innerText = "Editando Receita";
-                document.getElementById('ft-rendimento').value = item.rendimento || 1;
-                
-                document.getElementById('bloco-lanche').classList.add('hidden');
-                document.getElementById('bloco-receita').classList.remove('hidden');
-                document.getElementById('painel-fin-lanche').classList.add('hidden');
-                document.getElementById('painel-fin-receita').classList.remove('hidden');
-                document.getElementById('btn-salvar-ficha').className = "btn-receita";
-                document.getElementById('btn-salvar-ficha').innerText = "SALVAR RECEITA";
-            }
-
-            document.getElementById('ft-nome').value = item.nome;
-            document.getElementById('ft-tipo-prato').value = item.tipo_prato || ""; 
+            document.getElementById('ft-nome').value = item.nome || "";
+            document.getElementById('ft-tipo-prato').value = item.tipo_prato || "";
             document.getElementById('ft-status').value = item.status || "ativo";
             document.getElementById('ft-obs').value = item.observacoes || "";
-            base64Img = item.imagem || "";
             document.getElementById('ft-img-preview').src = item.imagem || "sem foto.png";
-            itensFicha = [...(item.ingredientes || [])];
-            passosFicha = [...(item.passos || [])];
+            base64Img = item.imagem || "";
             
-            renderItensFicha(); renderPassos(); 
-            if(tipo === 'lanche') calcularCMV(); else calcularCustoReceita();
+            itensFicha = item.ingredientes ? [...item.ingredientes] : [];
+            passosFicha = item.passos ? [...item.passos] : [];
+            
             renderHistoricoGenerico('ft-lista-historico', item.historico || []);
             
+            if (tipo === 'lanche') {
+                document.getElementById('ft-titulo-tela').innerText = "Editando Lanche: " + item.nome;
+                document.getElementById('bloco-lanche').classList.remove('hidden');
+                document.getElementById('painel-fin-lanche').classList.remove('hidden');
+                document.getElementById('bloco-receita').classList.add('hidden');
+                document.getElementById('painel-fin-receita').classList.add('hidden');
+                document.getElementById('ft-venda-manual').value = item.preco_venda || "";
+            } else {
+                document.getElementById('ft-titulo-tela').innerText = "Editando Receita: " + item.nome;
+                document.getElementById('bloco-receita').classList.remove('hidden');
+                document.getElementById('painel-fin-receita').classList.remove('hidden');
+                document.getElementById('bloco-lanche').classList.add('hidden');
+                document.getElementById('painel-fin-lanche').classList.add('hidden');
+                document.getElementById('ft-rendimento').value = item.rendimento || "1";
+            }
+            
+            renderItensFicha();
+            renderPassos();
+            if(tipo === 'lanche') calcularCMV(); else calcularCustoReceita();
             navegar('screen-ficha');
         }
 
         function fecharFicha() {
             const tipo = document.getElementById('ft-tipo-ficha').value;
-            if(tipo === 'lanche') navegar('screen-lanches');
-            else navegar('screen-receitas');
+            navegar(tipo === 'lanche' ? 'screen-lanches' : 'screen-receitas');
         }
 
-        // --- CÓDIGO DA PARTE 2 QUE VOCÊ ENVIOU ANTES ---
+        // Refatoração: Função unificada e segura para Excluir Fichas Técnicas
+        async function excluirFichaPrincipal(id, colecao) {
+            if(confirm("ATENÇÃO: Deseja realmente excluir esta ficha? Esta ação apagará permanentemente os dados e não pode ser desfeita.")) {
+                await db.collection(colecao).doc(id).delete();
+                await carregarDados();
+            }
+        }
+
+        async function salvarFicha() {
+            const tipo = document.getElementById('ft-tipo-ficha').value;
+            const colecao = tipo === 'lanche' ? 'receitas' : 'receitas_base';
+            
+            const custoTotalInsumos = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
+            const dataAtual = new Date().toLocaleString('pt-BR');
+            
+            let obj = {
+                nome: document.getElementById('ft-nome').value,
+                tipo_prato: document.getElementById('ft-tipo-prato').value,
+                status: document.getElementById('ft-status').value,
+                ingredientes: itensFicha,
+                passos: passosFicha,
+                imagem: base64Img,
+                observacoes: document.getElementById('ft-obs').value
+            };
+
+            let valorHistorico = 0;
+
+            if(tipo === 'lanche') {
+                obj.custo = custoTotalInsumos;
+                obj.preco_venda = parseFloat(document.getElementById('ft-venda-manual').value) || 0;
+                valorHistorico = custoTotalInsumos;
+            } else {
+                const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
+                obj.custo_total = custoTotalInsumos;
+                obj.rendimento = rendimento;
+                obj.custo_porcao = custoTotalInsumos / rendimento;
+                valorHistorico = obj.custo_porcao;
+            }
+
+            if (editingId) {
+                const arrayFonte = tipo === 'lanche' ? lanches : receitasBase;
+                const itemAntigo = arrayFonte.find(x => x.id === editingId);
+                let hist = itemAntigo.historico || [];
+                
+                const valorAntigo = tipo === 'lanche' ? itemAntigo.custo : itemAntigo.custo_porcao;
+                
+                if (Math.abs(valorAntigo - valorHistorico) > 0.01) {
+                    hist.unshift({ data: dataAtual, valor: valorHistorico, info: tipo === 'lanche' ? "Custo do Lanche" : "Custo por Porção" });
+                }
+                obj.historico = hist.slice(0, 10);
+                await db.collection(colecao).doc(editingId).update(obj);
+            } else {
+                obj.historico = [{ data: dataAtual, valor: valorHistorico, info: "Criação" }];
+                await db.collection(colecao).add(obj);
+            }
+            
+            await carregarDados();
+            fecharFicha();
+        }
+
         function renderLanches() {
             document.getElementById('list-lanches').innerHTML = lanches.map(l => `
                 <div class="card" style="display:flex; align-items:center;">
@@ -507,7 +603,10 @@
                         <b>${l.nome}</b> <span style="font-size:10px; color:gray;">[${l.status || 'ativo'}]</span><br>
                         <small>Custo: R$ ${(l.custo || 0).toFixed(2)}</small>
                     </div>
-                    <button class="btn-small" onclick="editarFicha('${l.id}', 'lanche')">✏️</button>
+                    <div style="display:flex; gap: 5px;">
+                        <button class="btn-small" onclick="editarFicha('${l.id}', 'lanche')">✏️</button>
+                        <button class="btn-small btn-excluir" style="background: var(--danger);" onclick="excluirFichaPrincipal('${l.id}', 'receitas')">🗑️</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -520,7 +619,10 @@
                         <b>${r.nome}</b> <span style="font-size:10px; color:gray;">[${r.status || 'ativo'}]</span><br>
                         <small>Porção: R$ ${(r.custo_porcao || 0).toFixed(2)}</small>
                     </div>
-                    <button class="btn-small" onclick="editarFicha('${r.id}', 'receita')">✏️</button>
+                    <div style="display:flex; gap: 5px;">
+                        <button class="btn-small" onclick="editarFicha('${r.id}', 'receita')">✏️</button>
+                        <button class="btn-small btn-excluir" style="background: var(--danger);" onclick="excluirFichaPrincipal('${r.id}', 'receitas_base')">🗑️</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -581,7 +683,7 @@
             document.getElementById('ft-lista-itens').innerHTML = itensFicha.map((i, idx) => `
                 <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee">
                     <span style="font-size:13px">${i.qtd}x ${i.nome}</span>
-                    <span>R$ ${i.custo.toFixed(2)} <button onclick="removerItemFicha(${idx})" style="color:red; background:none; border:none; padding:0 5px; font-weight:bold;">✕</button></span>
+                    <span>R$ ${i.custo.toFixed(2)} <button class="no-print" onclick="removerItemFicha(${idx})" style="color:red; background:none; border:none; padding:0 5px; font-weight:bold;">✕</button></span>
                 </div>
             `).join('');
         }
@@ -613,11 +715,11 @@
             const custoTotal = itensFicha.reduce((acc, curr) => acc + curr.custo, 0);
             const rendimento = parseFloat(document.getElementById('ft-rendimento').value) || 1;
             const custoPorPorcao = custoTotal / rendimento;
-            const sugerido = custoPorPorcao / 0.35; 
+            
+            // Refatoração: Removido o cálculo e exibição do preço sugerido (35%) para Receitas Base.
 
             document.getElementById('res-custo-total-rec').innerText = `R$ ${custoTotal.toFixed(2)}`;
             document.getElementById('res-custo-porcao').innerText = `R$ ${custoPorPorcao.toFixed(2)}`;
-            document.getElementById('res-sugerido-rec').innerText = `R$ ${sugerido.toFixed(2)}`;
         }
 
         function renderHistoricoGenerico(containerId, hist) {
@@ -643,7 +745,7 @@
             document.getElementById('ft-lista-passos').innerHTML = passosFicha.map((p, i) => `
                 <div style="padding:5px; border-bottom:1px solid #eee; display:flex; justify-content:space-between">
                     <span style="font-size:13px">${i+1}. ${p}</span>
-                    <button onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none; font-weight:bold;">✕</button>
+                    <button class="no-print" onclick="passosFicha.splice(${i},1);renderPassos()" style="color:red; background:none; border:none; font-weight:bold;">✕</button>
                 </div>
             `).join('');
         }
@@ -658,6 +760,7 @@
         }
 
         async function excluirItem(col, id) { if(confirm("Deseja realmente excluir este item?")) { await db.collection(col).doc(id).delete(); carregarDados(); } }
+
         async function salvarApoio(col, inputId) { const nome = document.getElementById(inputId).value; if(nome) { await db.collection(col).add({nome}); document.getElementById(inputId).value=''; carregarDados(); } }
         
         function previewImage(i) {
